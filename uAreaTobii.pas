@@ -1674,6 +1674,7 @@ begin
     BoxUpdate(2, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(2, 7, 91200, '',              True, sm_blinkback, True);
 
+
     BoxUpdate(3, 1, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(3, 2, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(3, 3, 91200, '',              True, sm_blinkback, True);
