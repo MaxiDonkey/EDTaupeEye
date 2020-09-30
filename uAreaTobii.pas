@@ -149,6 +149,8 @@ type
     procedure SetSubGMIndex(const Value: Integer);
     function  GetGMAllSlide: Boolean;
     procedure SetGMAllSlide(const Value: Boolean);
+    function  GetSlideOffms: Integer;
+    procedure SetSlideOffms(const Value: Integer);
   public
     { --- Elite notifier }
     procedure EliteNotify(const ATag: Integer);
@@ -202,6 +204,8 @@ type
     property IndexGMMode: Integer read GetIndexGMMode write SetIndexGMMode;
     property SubGMIndex: Integer read GetSubGMIndex write SetSubGMIndex;
     property GMAllSlide: Boolean read GetGMAllSlide write SetGMAllSlide;
+    { --- Time slide off }
+    property SlideOffms: Integer read GetSlideOffms write SetSlideOffms;
 
     constructor Create(const AOwner: TAreaTobii);
   end;
@@ -382,6 +386,16 @@ begin
     SetForegroundWindow( FindWindow( PWideChar(ELITE_CLASS), nil ) )
   except
   end;
+end;
+
+procedure Delay(ms: Cardinal);
+var
+  S : Cardinal;
+begin
+  S := GetTickCount + ms;
+  with Application do repeat
+    Sleep( 10 );
+  until Terminated or (GetTickCount > S)
 end;
 
 { TAreaTobii }
@@ -2336,7 +2350,11 @@ procedure TEliteContext.DoGMDown;
 begin
   with FOwner, FEliteManager do begin
     case IndexGMMode of
-      0 : Sud;
+      0 : begin
+            Sud(1, 180);
+            Delay(SlideOffms);
+            Sud;
+          end;
       1 : Sud(1, 90);
       2 : Sud(1, 180);
       3 : Sud(1, 360);
@@ -2348,7 +2366,11 @@ procedure TEliteContext.DoGMDownRotate;
 begin
   with FOwner, FEliteManager do begin
     case IndexGMMode of
-      0 : CamPitchDown;
+      0 : begin
+            CamPitchDown(180);
+            Delay(SlideOffms);
+            CamPitchDown;
+          end;
       1 : CamPitchDown(90);
       2 : CamPitchDown(180);
       3 : CamPitchDown(360);
@@ -2360,7 +2382,11 @@ procedure TEliteContext.DoGMForward;
 begin
   with FOwner, FEliteManager do begin
     case IndexGMMode of
-      0 : Fils;
+      0 : begin
+            Fils(1, 180);
+            Delay(SlideOffms);
+            Fils;
+          end;
       1 : Fils(1, 90);
       2 : Fils(1, 180);
       3 : Fils(1, 360);
@@ -2377,7 +2403,11 @@ procedure TEliteContext.DoGMLeft;
 begin
   with FOwner, FEliteManager do begin
     case IndexGMMode of
-      0 : Ouest;
+      0 : begin
+            Ouest(1, 180);
+            Delay(SlideOffms);
+            Ouest;
+          end;
       1 : Ouest(1, 90);
       2 : Ouest(1, 180);
       3 : Ouest(1, 360);
@@ -2389,7 +2419,11 @@ procedure TEliteContext.DoGMLeftRotate;
 begin
   with FOwner, FEliteManager do begin
     case IndexGMMode of
-      0 : CamYawLeft;
+      0 : begin
+            CamYawLeft(180);
+            Delay(SlideOffms);
+            CamYawLeft;
+          end;
       1 : CamYawLeft(90);
       2 : CamYawLeft(180);
       3 : CamYawLeft(360);
@@ -2406,7 +2440,11 @@ procedure TEliteContext.DoGMReward;
 begin
   with FOwner, FEliteManager do begin
     case IndexGMMode of
-      0 : Pere;
+      0 : begin
+            Pere(1, 180);
+            Delay(SlideOffms);
+            Pere;
+          end;
       1 : Pere(1, 90);
       2 : Pere(1, 180);
       3 : Pere(1, 360);
@@ -2418,7 +2456,11 @@ procedure TEliteContext.DoGMRight;
 begin
   with FOwner, FEliteManager do begin
     case IndexGMMode of
-      0 : Est;
+      0 : begin
+            Est(1, 180);
+            Delay(SlideOffms);
+            Est;
+          end;
       1 : Est(1, 90);
       2 : Est(1, 180);
       3 : Est(1, 360);
@@ -2430,7 +2472,11 @@ procedure TEliteContext.DoGMRightRotate;
 begin
   with FOwner, FEliteManager do begin
     case IndexGMMode of
-      0 : CamYawRight;
+      0 : begin
+            CamYawRight(180);
+            Delay(SlideOffms);
+            CamYawRight;
+          end;
       1 : CamYawRight(90);
       2 : CamYawRight(180);
       3 : CamYawRight(360);
@@ -2461,7 +2507,11 @@ procedure TEliteContext.DoGMUp;
 begin
   with FOwner, FEliteManager do begin
     case IndexGMMode of
-      0 : Nord;
+      0 : begin
+            Nord(1, 180);
+            Delay(SlideOffms);
+            Nord;
+          end;
       1 : Nord(1, 90);
       2 : Nord(1, 180);
       3 : Nord(1, 360);
@@ -2473,7 +2523,11 @@ procedure TEliteContext.DoGMUpRotate;
 begin
   with FOwner, FEliteManager do begin
     case IndexGMMode of
-      0 : CamPitchUp;
+      0 : begin
+            CamPitchUp(180);
+            Delay(SlideOffms);
+            CamPitchUp;
+          end;
       1 : CamPitchUp(90);
       2 : CamPitchUp(180);
       3 : CamPitchUp(360);
@@ -2485,7 +2539,11 @@ procedure TEliteContext.DoGMZoomIn;
 begin
   with FOwner, FEliteManager do begin
     case IndexGMMode of
-      0 : CamZoomIn;
+      0 : begin
+            CamZoomIn(180);
+            Delay(SlideOffms);
+            CamZoomIn;
+          end;
       1 : CamZoomIn(90);
       2 : CamZoomIn(180);
       3 : CamZoomIn(360);
@@ -2497,7 +2555,11 @@ procedure TEliteContext.DoGMZoomOut;
 begin
   with FOwner, FEliteManager do begin
     case IndexGMMode of
-      0 : CamZoomOut;
+      0 : begin
+            CamZoomOut(180);
+            Delay(SlideOffms);
+            CamZoomOut;
+          end;
       1 : CamZoomOut(90);
       2 : CamZoomOut(180);
       3 : CamZoomOut(360);
@@ -2515,21 +2577,33 @@ end;
 
 procedure TEliteContext.DoNavEst;
 begin
-  with FOwner, EliteManager do case IndexMode of
-    0 : Est;
-    1 : Est(1,120);
-    2 : Est(1,200);
-    3 : Est(1,300);
+  with FOwner, EliteManager do begin
+    case IndexMode of
+      0 : begin
+            Est(1,120);
+            Delay(SlideOffms);
+            Est;
+          end;
+      1 : Est(1,120);
+      2 : Est(1,200);
+      3 : Est(1,300);
+    end
   end
 end;
 
 procedure TEliteContext.DoNavFils;
 begin
-  with FOwner, EliteManager do case IndexMode of
-    0 : Fils;
-    1 : Fils(1,120);
-    2 : Fils(1,200);
-    3 : Fils(1,300);
+  with FOwner, EliteManager do begin
+    case IndexMode of
+      0 : begin
+            Fils(1,120);
+            Delay(SlideOffms);
+            Fils;
+          end;
+      1 : Fils(1,120);
+      2 : Fils(1,200);
+      3 : Fils(1,300);
+    end
   end
 end;
 
@@ -2548,31 +2622,49 @@ end;
 
 procedure TEliteContext.DoNavNord;
 begin
-  with FOwner, EliteManager do case IndexMode of
-    0 : Nord;
-    1 : Nord(1,120);
-    2 : Nord(1,200);
-    3 : Nord(1,300);
+  with FOwner, EliteManager do begin
+    case IndexMode of
+      0 : begin
+            Nord(1,120);
+            Delay(SlideOffms);
+            Nord;
+          end;
+      1 : Nord(1,120);
+      2 : Nord(1,200);
+      3 : Nord(1,300);
+    end
   end
 end;
 
 procedure TEliteContext.DoNavOuest;
 begin
-  with FOwner, EliteManager do case IndexMode of
-    0 : Ouest;
-    1 : Ouest(1,120);
-    2 : Ouest(1,200);
-    3 : Ouest(1,300);
+  with FOwner, EliteManager do begin
+    case IndexMode of
+      0 : begin
+            Ouest(1,120);
+            Delay(SlideOffms);
+            Ouest;
+          end;
+      1 : Ouest(1,120);
+      2 : Ouest(1,200);
+      3 : Ouest(1,300);
+    end
   end
 end;
 
 procedure TEliteContext.DoNavPere;
 begin
-  with FOwner, EliteManager do case IndexMode of
-    0 : Pere;
-    1 : Pere(1,120);
-    2 : Pere(1,200);
-    3 : Pere(1,300);
+  with FOwner, EliteManager do begin
+    case IndexMode of
+      0 : begin
+            Pere(1,120);
+            Delay(SlideOffms);
+            Pere;
+          end;
+      1 : Pere(1,120);
+      2 : Pere(1,200);
+      3 : Pere(1,300);
+    end
   end
 end;
 
@@ -2585,11 +2677,17 @@ end;
 
 procedure TEliteContext.DoNavSud;
 begin
-  with FOwner, EliteManager do case IndexMode of
-    0 : Sud;
-    1 : Sud(1,120);
-    2 : Sud(1,200);
-    3 : Sud(1,300);
+  with FOwner, EliteManager do begin
+    case IndexMode of
+      0 : begin
+            Sud(1,120);
+            Delay(SlideOffms);
+            Sud;
+          end;
+      1 : Sud(1,120);
+      2 : Sud(1,200);
+      3 : Sud(1,300);
+    end
   end
 end;
 
@@ -2845,6 +2943,11 @@ begin
   Result := KeyReadInt(ParamKey, 'IndexMode', 0)
 end;
 
+function TEliteContext.GetSlideOffms: Integer;
+begin
+  Result := KeyReadInt(ParamKey, 'SlideOffms', 2)
+end;
+
 function TEliteContext.GetStep: Integer;
 begin
   Result := KeyReadInt(ParamKey, 'Step', 1)
@@ -2910,6 +3013,11 @@ end;
 procedure TEliteContext.SetIndexMode(const Value: Integer);
 begin
   KeyWrite(ParamKey, 'IndexMode', Value)
+end;
+
+procedure TEliteContext.SetSlideOffms(const Value: Integer);
+begin
+  KeyWrite(ParamKey, 'SlideOffms', Value)
 end;
 
 procedure TEliteContext.SetStep(const Value: Integer);

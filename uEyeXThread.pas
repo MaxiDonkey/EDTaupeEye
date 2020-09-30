@@ -876,12 +876,12 @@ begin
     sm_blinknotback       : Activate(True,  False, True,  False);
     sm_blinkback          : Activate(True,  False, True,  True);
   end;
-end; procedure TAreaPanels.SetTransitoryMultiClick(const Value: Boolean);
+end; {SetSelectMode}
+
+procedure TAreaPanels.SetTransitoryMultiClick(const Value: Boolean);
 begin
   KeyWrite(ParamKey, 'TransitoryMultiClick', Value)
 end;
-
-{SetSelectMode}
 
 procedure TAreaPanels.SetValiColor(const Value: TColor);
 begin
