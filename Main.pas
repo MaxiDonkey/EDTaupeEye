@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, EyeXHost, Vcl.ExtCtrls, uEyeXThread,
-  uAreaTobii, Data.DB, Datasnap.DBClient, uXMLDico, ActiveX,
+  uAreaTobii, Data.DB, Datasnap.DBClient, uXMLDico, ActiveX, System.UITypes,
   uEliteManager, EliteBindingsTools, uStatusReader, uRegistry;
 
 // window messages used for notifications from the EyeXHost.
@@ -72,6 +72,7 @@ type
     procedure OnGotActivationFocus(var Msg: TMessage); message WM_REGION_GOT_ACTIVATION_FOCUS;
     procedure OnMove(var Msg: TWMMove); message WM_MOVE;
     procedure AppUpdate(Sender: TObject);
+    procedure ContextObserverStart;
   public
     EyeXHost     : TEyeXHost;
     AreaTobii    : TAreaTobii;
@@ -92,6 +93,12 @@ uses
 procedure TMainForm.AppUpdate(Sender: TObject);
 begin
   Update;
+end;
+
+procedure TMainForm.ContextObserverStart;
+begin
+  ContextObserver := TContextObserver.Create(AreaTobii);
+  ContextObserver.Start
 end;
 
 procedure TMainForm.DelayedStarterTimer(Sender: TObject);
@@ -116,6 +123,8 @@ begin
   end;
   EyeXHost := TEyeXHost.create;
   TKeyMessageSender.Initialize;
+  { --- Instancie end start context observer }
+  ContextObserverStart
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);

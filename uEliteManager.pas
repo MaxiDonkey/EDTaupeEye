@@ -211,29 +211,45 @@ type
     procedure Follow;
     procedure OpenOrders;
     {CMD : ACS}
-    procedure ACSCameraPitchInc(tms: Integer = 0);
-    procedure ACSCameraPitchDec(tms: Integer = 0);
-    procedure ACSCameraYawInc(tms: Integer = 0);
-    procedure ACSCameraYawDec(tms: Integer = 0);
-    procedure ACSZoomIn(tms: Integer = 0);
-    procedure ACSZoomOut(tms: Integer = 0);
-    procedure ACSZoomInMini(tms: Integer = 0);
-    procedure ACSZoomOutMini(tms: Integer = 0);
-    procedure ACSRadioInc(tms: Integer = 0);
-    procedure ACSRadioDec(tms: Integer = 0);
-    procedure ACSAnalyse(tms: Integer = 0);
+    procedure ACSCameraPitchInc(tms: Integer); overload;
+    procedure ACSCameraPitchInc; overload;
+    procedure ACSCameraPitchDec(tms: Integer); overload;
+    procedure ACSCameraPitchDec; overload;
+    procedure ACSCameraYawInc(tms: Integer); overload;
+    procedure ACSCameraYawInc; overload;
+    procedure ACSCameraYawDec(tms: Integer); overload;
+    procedure ACSCameraYawDec; overload;
+    procedure ACSZoomIn(tms: Integer); overload;
+    procedure ACSZoomIn; overload;
+    procedure ACSZoomOut(tms: Integer); overload;
+    procedure ACSZoomOut; overload;
+    procedure ACSZoomInMini(tms: Integer); overload;
+    procedure ACSZoomInMini; overload;
+    procedure ACSZoomOutMini(tms: Integer); overload;
+    procedure ACSZoomOutMini; overload;
+    procedure ACSRadioInc(tms: Integer); overload;
+    procedure ACSRadioInc; overload;
+    procedure ACSRadioDec(tms: Integer); overload;
+    procedure ACSRadioDec; overload;
+    procedure ACSAnalyse(tms: Integer);
     procedure ACSClose;
     procedure ACSGetTarget;
     procedure ACSHelp;
     {CMD : DSD}
     procedure DSDViewChange;
     procedure DSDClose;
-    procedure DSDYawLeft(tms: Integer = 0);
-    procedure DSDYawRight(tms: Integer = 0);
-    procedure DSDPitchUp(tms: Integer = 0);
-    procedure DSDPitchDown(tms: Integer = 0);
-    procedure DSDZoomOut(tms: Integer = 0);
-    procedure DSDZoomIn(tms: Integer = 0);
+    procedure DSDYawLeft(tms: Integer); overload;
+    procedure DSDYawLeft; overload;
+    procedure DSDYawRight(tms: Integer); overload;
+    procedure DSDYawRight; overload;
+    procedure DSDPitchUp(tms: Integer); overload;
+    procedure DSDPitchUp; overload;
+    procedure DSDPitchDown(tms: Integer); overload;
+    procedure DSDPitchDown; overload;
+    procedure DSDZoomOut(tms: Integer); overload;
+    procedure DSDZoomOut; overload;
+    procedure DSDZoomIn(tms: Integer); overload;
+    procedure DSDZoomIn; overload;
     {CMD : Carte de la galaxie}
     procedure CamPitchUp(tms: Integer); overload;
     procedure CamPitchUp; overload;
@@ -1615,7 +1631,7 @@ end; {CockpitMode}
 
 procedure TCustomEliteManager.ModeACS;
 begin
-  FKeyInventory.KeyTrigger_( 'ExplorationFSSEnter', WITH_KEYUP)
+  FKeyInventory.KeyTrigger_( 'ExplorationFSSEnter', WITH_KEYUP);
 end;
 
 procedure TCustomEliteManager.UISelect;
@@ -1879,6 +1895,16 @@ begin
   end
 end;
 
+procedure TCustomEliteManager.ACSCameraPitchDec;
+begin
+  FKeyInventory.KeyTrigger_( 'ExplorationFSSCameraPitchDecreaseButton', WITHOUT_KEYUP )
+end;
+
+procedure TCustomEliteManager.ACSCameraPitchInc;
+begin
+  FKeyInventory.KeyTrigger_( 'ExplorationFSSCameraPitchIncreaseButton', WITHOUT_KEYUP )
+end;
+
 procedure TCustomEliteManager.ACSCameraYawInc(tms: Integer);
 begin
   case EliteStatus.GuiValue of
@@ -1897,6 +1923,16 @@ begin
        else FKeyInventory.KeyTrigger_( 'ExplorationFSSCameraYawDecreaseButton', tms)
    end
   end
+end;
+
+procedure TCustomEliteManager.ACSCameraYawDec;
+begin
+  FKeyInventory.KeyTrigger_( 'ExplorationFSSCameraYawDecreaseButton', WITHOUT_KEYUP )
+end;
+
+procedure TCustomEliteManager.ACSCameraYawInc;
+begin
+  FKeyInventory.KeyTrigger_( 'ExplorationFSSCameraYawIncreaseButton', WITHOUT_KEYUP )
 end;
 
 procedure TCustomEliteManager.ACSZoomIn(tms: Integer);
@@ -1919,6 +1955,16 @@ begin
   end
 end;
 
+procedure TCustomEliteManager.ACSZoomIn;
+begin
+  FKeyInventory.KeyTrigger_( 'ExplorationFSSZoomIn', WITHOUT_KEYUP )
+end;
+
+procedure TCustomEliteManager.ACSZoomInMini;
+begin
+  FKeyInventory.KeyTrigger_( 'ExplorationFSSMiniZoomIn', WITHOUT_KEYUP )
+end;
+
 procedure TCustomEliteManager.ACSZoomInMini(tms: Integer);
 begin
   case EliteStatus.GuiValue of
@@ -1927,6 +1973,16 @@ begin
        else FKeyInventory.KeyTrigger_( 'ExplorationFSSMiniZoomIn', tms)
    end
   end
+end;
+
+procedure TCustomEliteManager.ACSZoomOut;
+begin
+  FKeyInventory.KeyTrigger_( 'ExplorationFSSZoomOut', WITHOUT_KEYUP )
+end;
+
+procedure TCustomEliteManager.ACSZoomOutMini;
+begin
+  FKeyInventory.KeyTrigger_( 'ExplorationFSSMiniZoomOut', WITHOUT_KEYUP )
 end;
 
 procedure TCustomEliteManager.ACSZoomOutMini(tms: Integer);
@@ -1957,6 +2013,16 @@ begin
        else FKeyInventory.KeyTrigger_( 'ExplorationFSSRadioTuningX_Decrease', tms)
    end
   end
+end;
+
+procedure TCustomEliteManager.ACSRadioDec;
+begin
+  FKeyInventory.KeyTrigger_( 'ExplorationFSSRadioTuningX_Decrease', WITHOUT_KEYUP )
+end;
+
+procedure TCustomEliteManager.ACSRadioInc;
+begin
+  FKeyInventory.KeyTrigger_( 'ExplorationFSSRadioTuningX_Increase', WITHOUT_KEYUP )
 end;
 
 procedure TCustomEliteManager.ACSAnalyse(tms: Integer);
@@ -2012,6 +2078,16 @@ begin
   end
 end;
 
+procedure TCustomEliteManager.DSDYawLeft;
+begin
+  FKeyInventory.KeyTrigger_( 'SAAThirdPersonYawLeftButton', WITHOUT_KEYUP )
+end;
+
+procedure TCustomEliteManager.DSDYawRight;
+begin
+  FKeyInventory.KeyTrigger_( 'SAAThirdPersonYawRightButton', WITHOUT_KEYUP )
+end;
+
 procedure TCustomEliteManager.DSDYawRight(tms: Integer);
 begin
   case EliteStatus.GuiValue of
@@ -2042,6 +2118,16 @@ begin
   end
 end;
 
+procedure TCustomEliteManager.DSDPitchDown;
+begin
+  FKeyInventory.KeyTrigger_( 'SAAThirdPersonPitchDownButton', WITHOUT_KEYUP )
+end;
+
+procedure TCustomEliteManager.DSDPitchUp;
+begin
+  FKeyInventory.KeyTrigger_( 'SAAThirdPersonPitchUpButton', WITHOUT_KEYUP )
+end;
+
 procedure TCustomEliteManager.DSDZoomOut(tms: Integer);
 begin
   case EliteStatus.GuiValue of
@@ -2060,6 +2146,16 @@ begin
         else FKeyInventory.KeyTrigger_( 'SAAThirdPersonFovInButton', tms)
     end
   end
+end;
+
+procedure TCustomEliteManager.DSDZoomIn;
+begin
+  FKeyInventory.KeyTrigger_( 'SAAThirdPersonFovInButton', WITHOUT_KEYUP )
+end;
+
+procedure TCustomEliteManager.DSDZoomOut;
+begin
+  FKeyInventory.KeyTrigger_( 'SAAThirdPersonFovOutButton', WITHOUT_KEYUP )
 end;
 
 procedure TCustomEliteManager.CamPitchUp(tms: Integer);
