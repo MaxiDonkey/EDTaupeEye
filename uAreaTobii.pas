@@ -2531,54 +2531,26 @@ end;
 
 procedure TEliteContext.DoACSPitchDec;
 begin
-  with FOwner, FEliteManager do NavLauncher(ACSCameraPitchDec, ACSCameraPitchDec, IndexACSMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexACSMode of
-//      0 : NavClic(ACSCameraPitchDec, ACSCameraPitchDec);
-//      1 : ACSCameraPitchDec(90);
-//      2 : ACSCameraPitchDec(180);
-//      3 : ACSCameraPitchDec(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(ACSCameraPitchDec, ACSCameraPitchDec, IndexACSMode)
 end;
 
 procedure TEliteContext.DoACSPitchInc;
 begin
-  with FOwner, FEliteManager do NavLauncher(ACSCameraPitchInc, ACSCameraPitchInc, IndexACSMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexACSMode of
-//      0 : NavClic(ACSCameraPitchInc, ACSCameraPitchInc);
-//      1 : ACSCameraPitchInc(90);
-//      2 : ACSCameraPitchInc(180);
-//      3 : ACSCameraPitchInc(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(ACSCameraPitchInc, ACSCameraPitchInc, IndexACSMode)
 end;
 
 procedure TEliteContext.DoACSRadioDec;
 begin
-  with FOwner, FEliteManager do NavLauncher(ACSRadioDec, ACSRadioDec, IndexACSMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexACSMode of
-//      0 : NavClic(ACSRadioDec, ACSRadioDec);
-//      1 : ACSRadioDec(90);
-//      2 : ACSRadioDec(180);
-//      3 : ACSRadioDec(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(ACSRadioDec, ACSRadioDec, IndexACSMode)
 end;
 
 procedure TEliteContext.DoACSRadioInc;
 begin
-  with FOwner, FEliteManager do NavLauncher(ACSRadioInc, ACSRadioInc, IndexACSMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexACSMode of
-//      0 : NavClic(ACSRadioInc, ACSRadioInc);
-//      1 : ACSRadioInc(90);
-//      2 : ACSRadioInc(180);
-//      3 : ACSRadioInc(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(ACSRadioInc, ACSRadioInc, IndexACSMode)
 end;
 
 procedure TEliteContext.DoACSShow;
@@ -2610,54 +2582,26 @@ end;
 
 procedure TEliteContext.DoACSYawDec;
 begin
-  with FOwner, FEliteManager do NavLauncher(ACSCameraYawDec, ACSCameraYawDec, IndexACSMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexACSMode of
-//      0 : NavClic(ACSCameraYawDec, ACSCameraYawDec);
-//      1 : ACSCameraYawDec(90);
-//      2 : ACSCameraYawDec(180);
-//      3 : ACSCameraYawDec(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(ACSCameraYawDec, ACSCameraYawDec, IndexACSMode)
 end;
 
 procedure TEliteContext.DoACSYawInc;
 begin
-  with FOwner, FEliteManager do NavLauncher(ACSCameraYawInc, ACSCameraYawInc, IndexACSMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexACSMode of
-//      0 : NavClic(ACSCameraYawInc, ACSCameraYawInc);
-//      1 : ACSCameraYawInc(90);
-//      2 : ACSCameraYawInc(180);
-//      3 : ACSCameraYawInc(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(ACSCameraYawInc, ACSCameraYawInc, IndexACSMode)
 end;
 
 procedure TEliteContext.DoACSZoomIn;
 begin
-  with FOwner, FEliteManager do NavLauncher(ACSZoomIn, ACSZoomIn, IndexACSMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexACSMode of
-//      0 : NavClic(ACSZoomIn, ACSZoomIn);
-//      1 : ACSZoomIn(90);
-//      2 : ACSZoomIn(180);
-//      3 : ACSZoomIn(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(ACSZoomIn, ACSZoomIn, IndexACSMode)
 end;
 
 procedure TEliteContext.DoACSZoomOut;
 begin
-  with FOwner, FEliteManager do NavLauncher(ACSZoomOut, ACSZoomOut, IndexACSMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexACSMode of
-//      0 : NavClic(ACSZoomOut, ACSZoomOut);
-//      1 : ACSZoomOut(90);
-//      2 : ACSZoomOut(180);
-//      3 : ACSZoomOut(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(ACSZoomOut, ACSZoomOut, IndexACSMode)
 end;
 
 procedure TEliteContext.DoAutoBreak;
@@ -2809,41 +2753,20 @@ end;
 
 procedure TEliteContext.DoGMDown;
 begin
-  with FOwner, FEliteManager do NavLauncherEx(Sud, Sud, IndexGMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexGMMode of
-//      0 : NavClic(Sud, Sud);
-//      1 : Sud(1, 90);
-//      2 : Sud(1, 180);
-//      3 : Sud(1, 360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncherEx(Sud, Sud, IndexGMMode)
 end;
 
 procedure TEliteContext.DoGMDownRotate;
 begin
-  with FOwner, FEliteManager do NavLauncher(CamPitchDown, CamPitchDown, IndexGMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexGMMode of
-//      0 : NavClic(CamPitchDown, CamPitchDown);
-//      1 : CamPitchDown(90);
-//      2 : CamPitchDown(180);
-//      3 : CamPitchDown(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(CamPitchDown, CamPitchDown, IndexGMMode)
 end;
 
 procedure TEliteContext.DoGMForward;
 begin
-  with FOwner, FEliteManager do NavLauncherEx(Fils, Fils, IndexGMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexGMMode of
-//      0 : NavClic(Fils, Fils);
-//      1 : Fils(1, 90);
-//      2 : Fils(1, 180);
-//      3 : Fils(1, 360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncherEx(Fils, Fils, IndexGMMode)
 end;
 
 procedure TEliteContext.DoGMGoHome;
@@ -2853,27 +2776,14 @@ end;
 
 procedure TEliteContext.DoGMLeft;
 begin
-  with FOwner, FEliteManager do NavLauncherEx(Ouest, Ouest, IndexGMMode)
-//  with FOwner, FEliteManager do
-//    case IndexGMMode of
-//      0 : NavClic(Ouest, Ouest);
-//      1 : Ouest(1, 90);
-//      2 : Ouest(1, 180);
-//      3 : Ouest(1, 360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncherEx(Ouest, Ouest, IndexGMMode)
 end;
 
 procedure TEliteContext.DoGMLeftRotate;
 begin
-  with FOwner, FEliteManager do NavLauncher(CamYawLeft, CamYawLeft, IndexGMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexGMMode of
-//      0 : NavClic(CamYawLeft, CamYawLeft);
-//      1 : CamYawLeft(90);
-//      2 : CamYawLeft(180);
-//      3 : CamYawLeft(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(CamYawLeft, CamYawLeft, IndexGMMode)
 end;
 
 procedure TEliteContext.DoGMMenu;
@@ -2883,41 +2793,20 @@ end;
 
 procedure TEliteContext.DoGMReward;
 begin
-  with FOwner, FEliteManager do NavLauncherEx(Pere, Pere, IndexGMMode)
-
-//  with FOwner, FEliteManager do begin
-//    case IndexGMMode of
-//      0 : NavClic(Pere, Pere);
-//      1 : Pere(1, 90);
-//      2 : Pere(1, 180);
-//      3 : Pere(1, 360);
-//    end
-//  end
+  with FOwner, FEliteManager do
+    NavLauncherEx(Pere, Pere, IndexGMMode)
 end;
 
 procedure TEliteContext.DoGMRight;
 begin
-  with FOwner, FEliteManager do NavLauncherEx(Est, Est, IndexGMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexGMMode of
-//      0 : NavClic(Est, Est);
-//      1 : Est(1, 90);
-//      2 : Est(1, 180);
-//      3 : Est(1, 360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncherEx(Est, Est, IndexGMMode)
 end;
 
 procedure TEliteContext.DoGMRightRotate;
 begin
-  with FOwner, FEliteManager do NavLauncher(CamYawRight, CamYawRight, IndexGMMode)
-//  with FOwner, FEliteManager do
-//    case IndexGMMode of
-//      0 : NavClic(CamYawRight, CamYawRight);
-//      1 : CamYawRight(90);
-//      2 : CamYawRight(180);
-//      3 : CamYawRight(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(CamYawRight, CamYawRight, IndexGMMode)
 end;
 
 procedure TEliteContext.DoGMSlide;
@@ -2940,54 +2829,26 @@ end;
 
 procedure TEliteContext.DoGMUp;
 begin
-  with FOwner, FEliteManager do NavLauncherEx(Nord, Nord, IndexGMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexGMMode of
-//      0 : NavClic(Nord, Nord);
-//      1 : Nord(1, 90);
-//      2 : Nord(1, 180);
-//      3 : Nord(1, 360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncherEx(Nord, Nord, IndexGMMode)
 end;
 
 procedure TEliteContext.DoGMUpRotate;
 begin
-  with FOwner, FEliteManager do NavLauncher(CamPitchUp, CamPitchUp, IndexGMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexGMMode of
-//      0 : NavClic(CamPitchUp, CamPitchUp);
-//      1 : CamPitchUp(90);
-//      2 : CamPitchUp(180);
-//      3 : CamPitchUp(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(CamPitchUp, CamPitchUp, IndexGMMode)
 end;
 
 procedure TEliteContext.DoGMZoomIn;
 begin
-  with FOwner, FEliteManager do NavLauncher(CamZoomIn, CamZoomIn, IndexGMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexGMMode of
-//      0 : NavClic(CamZoomIn, CamZoomIn);
-//      1 : CamZoomIn(90);
-//      2 : CamZoomIn(180);
-//      3 : CamZoomIn(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(CamZoomIn, CamZoomIn, IndexGMMode)
 end;
 
 procedure TEliteContext.DoGMZoomOut;
 begin
-  with FOwner, FEliteManager do NavLauncher(CamZoomOut, CamZoomOut, IndexGMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexGMMode of
-//      0 : NavClic(CamZoomOut, CamZoomOut);
-//      1 : CamZoomOut(90);
-//      2 : CamZoomOut(180);
-//      3 : CamZoomOut(360);
-//    end
+  with FOwner, FEliteManager do
+    NavLauncher(CamZoomOut, CamZoomOut, IndexGMMode)
 end;
 
 procedure TEliteContext.DoKeyBoardShow;
@@ -3042,32 +2903,17 @@ end;
 procedure TEliteContext.DoNavEst;
 begin
   with FOwner, EliteManager do NavLauncher(Est, Est, IndexMode)
-//  with FOwner, EliteManager do
-//    case IndexMode of
-//      0 : NavClic(Est, Est);
-//      1 : Est(1,120);
-//      2 : Est(1,200);
-//      3 : Est(1,300);
-//    end
 end;
 
 procedure TEliteContext.DoNavFils;
 begin
   with FOwner, EliteManager do NavLauncher(Fils, Fils, IndexMode)
-//  with FOwner, EliteManager do
-//    case IndexMode of
-//      0 : NavClic(Fils, Fils);
-//      1 : Fils(1,120);
-//      2 : Fils(1,200);
-//      3 : Fils(1,300);
-//    end
 end;
 
 procedure TEliteContext.DoNavModeChange;
 begin
-  if IndexMode = 0 then begin
-    IndexMode := SubIndex
-  end else begin
+  if IndexMode = 0 then IndexMode := SubIndex
+  else begin
     IndexMode := (IndexMode + 1) mod 4;
     if IndexMode = 0 then IndexMode := 1;
     SubIndex := IndexMode;
@@ -3079,38 +2925,16 @@ end;
 procedure TEliteContext.DoNavNord;
 begin
   with FOwner, EliteManager do NavLauncher(Nord, Nord, IndexMode)
-
-//  with FOwner, EliteManager do
-//    case IndexMode of
-//      0 : NavClic(Nord, Nord);
-//      1 : Nord(1,120);
-//      2 : Nord(1,200);
-//      3 : Nord(1,300);
-//    end
 end;
 
 procedure TEliteContext.DoNavOuest;
 begin
   with FOwner, EliteManager do NavLauncher(Ouest, Ouest, IndexMode)
-//  with FOwner, EliteManager do
-//    case IndexMode of
-//      0 : NavClic(Ouest, Ouest);
-//      1 : Ouest(1,120);
-//      2 : Ouest(1,200);
-//      3 : Ouest(1,300);
-//    end
 end;
 
 procedure TEliteContext.DoNavPere;
 begin
   with FOwner, EliteManager do NavLauncher(Pere, Pere, IndexMode)
-//  with FOwner, EliteManager do
-//    case IndexMode of
-//      0 : NavClic(Pere, Pere);
-//      1 : Pere(1,120);
-//      2 : Pere(1,200);
-//      3 : Pere(1,300);
-//    end
 end;
 
 procedure TEliteContext.DoNavSlide;
@@ -3123,13 +2947,6 @@ end;
 procedure TEliteContext.DoNavSud;
 begin
   with FOwner, EliteManager do NavLauncher(Sud, Sud, IndexMode)
-//  with FOwner, EliteManager do
-//    case IndexMode of
-//      0 : NavClic(Sud, Sud);
-//      1 : Sud(1,120);
-//      2 : Sud(1,200);
-//      3 : Sud(1,300);
-//    end
 end;
 
 procedure TEliteContext.DoOrderPanel;
@@ -3167,54 +2984,21 @@ end;
 procedure TEliteContext.DoSMGoDown;
 begin
   with FOwner, FEliteManager do NavLauncherEx(Fils, Fils, IndexSMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexSMMode of
-//      0 : NavClic(Fils, Fils);
-//      1 : Fils(1, 90);
-//      2 : Fils(1, 180);
-//      3 : Fils(1, 360);
-//    end
 end;
 
 procedure TEliteContext.DoSMGoLeft;
 begin
   with FOwner, FEliteManager do NavLauncherEx(Ouest, Ouest, IndexSMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexSMMode of
-//      0 : NavClic(Ouest, Ouest);
-//      1 : Ouest(1, 90);
-//      2 : Ouest(1, 180);
-//      3 : Ouest(1, 360);
-//    end
 end;
 
 procedure TEliteContext.DoSMGoRight;
 begin
   with FOwner, FEliteManager do NavLauncherEx(Est, Est, IndexSMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexSMMode of
-//      0 : NavClic(Est, Est);
-//      1 : Est(1, 90);
-//      2 : Est(1, 180);
-//      3 : Est(1, 360);
-//    end
 end;
 
 procedure TEliteContext.DoSMGoUp;
 begin
   with FOwner, FEliteManager do NavLauncherEx(Pere, Pere, IndexSMMode)
-
-//  with FOwner, FEliteManager do begin
-//    case IndexSMMode of
-//      0 : NavClic(Pere, Pere);
-//      1 : Pere(1, 90);
-//      2 : Pere(1, 180);
-//      3 : Pere(1, 360);
-//    end
-//  end
 end;
 
 procedure TEliteContext.DoSMMenu;
@@ -3243,27 +3027,11 @@ end;
 procedure TEliteContext.DoSMZoomIn;
 begin
   with FOwner, FEliteManager do NavLauncher(CamZoomIn, CamZoomIn, IndexSMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexSMMode of
-//      0 : NavClic(CamZoomIn, CamZoomIn);
-//      1 : CamZoomIn(90);
-//      2 : CamZoomIn(180);
-//      3 : CamZoomIn(360);
-//    end
 end;
 
 procedure TEliteContext.DoSMZoomOut;
 begin
   with FOwner, FEliteManager do NavLauncher(CamZoomOut, CamZoomOut, IndexSMMode)
-
-//  with FOwner, FEliteManager do
-//    case IndexSMMode of
-//      0 : NavClic(CamZoomOut, CamZoomOut);
-//      1 : CamZoomOut(90);
-//      2 : CamZoomOut(180);
-//      3 : CamZoomOut(360);
-//    end
 end;
 
 procedure TEliteContext.DoStartFighter;
@@ -3830,10 +3598,10 @@ procedure TEliteContext.Switch;
 begin
   with FOwner, FEliteStatus do case CurrContextTag of
     91580   : case TGuiType(GuiFocus) of
-                gt_galaxymap : GalaxyMap_display;
-                gt_systemmap : SystemMap_display;
-                else if not Landed and not Docked then Drive_display;
-              end;
+      gt_galaxymap : GalaxyMap_display;
+      gt_systemmap : SystemMap_display;
+      else if not Landed and not Docked then Drive_display;
+    end;
     91590,
     91420,
     91450   : Menu_display;
