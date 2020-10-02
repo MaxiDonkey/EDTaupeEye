@@ -12,3 +12,6 @@ own shortcuts to access all the functions available in Elite Dangerous. The tool
 of changes it has made to the file.
 
 - **EdTaupeEye** also scans the *Status.json* file to contextually adapt the functions that can be displayed.
+
+## **Overview**
+![piloting the ship](https://https://github.com/MaxiDonkey/EDTaupeEye/tree/master/img/edte_img0.png)
