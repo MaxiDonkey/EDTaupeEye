@@ -15,3 +15,14 @@ of changes it has made to the file.
 
 ## **Overview**
 [Piloting the ship](https://github.com/MaxiDonkey/EDTaupeEye/tree/master/img/edte_img0mini.png)
+
+[Access to Elite functions](https://github.com/MaxiDonkey/EDTaupeEye/tree/master/img/edte_img1mini.png)
+
+[Galaxy map manipulations ](https://github.com/MaxiDonkey/EDTaupeEye/tree/master/img/edte_img2mini.png)
+
+[Menus manipulations](https://github.com/MaxiDonkey/EDTaupeEye/tree/master/img/edte_img3mini.png)
+
+[Using keyboard](https://github.com/MaxiDonkey/EDTaupeEye/tree/master/img/edte_img4mini.png)
+
+
+
