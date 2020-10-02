@@ -1,5 +1,5 @@
 # EDTaupeEye
-Elite Dangerous Tool (using Tobii Eye trackers to play with Elite  Dangerous) From Galactic 911
+Elite Dangerous Tool (using Tobii Eye trackers to play with Elite  Dangerous) From **Galactic 911**
 
 ## **Abstract**
 
