@@ -14,4 +14,4 @@ of changes it has made to the file.
 - **EdTaupeEye** also scans the *Status.json* file to contextually adapt the functions that can be displayed.
 
 ## **Overview**
-![piloting the ship](https://github.com/MaxiDonkey/EDTaupeEye/tree/master/img/edte_img0mini.png)
+[Piloting the ship](https://github.com/MaxiDonkey/EDTaupeEye/tree/master/img/edte_img0.png)
