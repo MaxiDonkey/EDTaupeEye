@@ -1,7 +1,7 @@
 # EDTaupeEye
 Elite Dangerous Tool (using Tobii Eye trackers to play with Elite  Dangerous) From **Galactic 911**
 
-**Project in progress** [---.......]
+**Project in progress** [123-------]
 
 ## **Abstract**
 
