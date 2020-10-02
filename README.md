@@ -1,6 +1,8 @@
 # EDTaupeEye
 Elite Dangerous Tool (using Tobii Eye trackers to play with Elite  Dangerous) From **Galactic 911**
 
+**Project in progress** [---.......]
+
 ## **Abstract**
 
 - **EDTaupeEye** is an interface that allows you to use the **Tobii Eye Trackers** to play **Elite Dangerous**. 
