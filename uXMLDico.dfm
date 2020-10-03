@@ -74,6 +74,10 @@ object XmlDico: TXmlDico
     TabOrder = 1
     object TabSheet1: TTabSheet
       Caption = 'ShortDico'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object DBGrid1: TDBGrid
         Left = 0
         Top = 0
@@ -102,6 +106,10 @@ object XmlDico: TXmlDico
     object TabSheet2: TTabSheet
       Caption = 'Ortholang'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object DBGrid2: TDBGrid
         Left = 0
         Top = 0
@@ -120,6 +128,10 @@ object XmlDico: TXmlDico
     object TabSheet3: TTabSheet
       Caption = 'PostDico'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object DBGrid3: TDBGrid
         Left = 0
         Top = 0

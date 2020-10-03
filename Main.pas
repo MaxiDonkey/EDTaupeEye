@@ -4,11 +4,15 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, EyeXHost, Vcl.ExtCtrls, uEyeXThread,
-  uAreaTobii, Data.DB, Datasnap.DBClient, uXMLDico, ActiveX, System.UITypes,
-  uEliteManager, EliteBindingsTools, uStatusReader, uRegistry;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Data.DB, Datasnap.DBClient,
+  System.UITypes, ActiveX,
+  { Spec }
+  uAreaTobii, uXMLDico, EyeXHost, uEyeXThread, uEliteManager, EliteBindingsTools,
+  uStatusReader, uRegistry;
 
-// window messages used for notifications from the EyeXHost.
+
+
+{ --- EyeXHost window messages notifications }
 const WM_EYEX_HOST_STATUS_CHANGED     = WM_USER + 0; //not used
       WM_REGION_GOT_ACTIVATION_FOCUS  = WM_USER + 1;
       WM_REGION_ACTIVATED             = WM_USER + 2; //not used
@@ -74,8 +78,8 @@ type
     procedure AppUpdate(Sender: TObject);
     procedure ContextObserverStart;
   public
-    EyeXHost     : TEyeXHost;
-    AreaTobii    : TAreaTobii;
+    EyeXHost  : TEyeXHost;
+    AreaTobii : TAreaTobii;
     procedure UpdateAreas(Sender: TObject);
   end;
 
@@ -154,7 +158,7 @@ begin
 
   { --- l'application est plein écran }
   Application.MainForm.WindowState := wsMaximized;
-  EyeXHost.Init(WindowHandle,WM_EYEX_HOST_STATUS_CHANGED,WM_REGION_GOT_ACTIVATION_FOCUS,WM_REGION_ACTIVATED);
+  EyeXHost.Init(WindowHandle, WM_EYEX_HOST_STATUS_CHANGED, WM_REGION_GOT_ACTIVATION_FOCUS, WM_REGION_ACTIVATED);
   UpdateActivatableRegions;
   { --- démarrage du thread de capture de focus pour les panels }
   CallSurveyor.Start;
@@ -164,7 +168,6 @@ begin
 end;
 
 
-// reports visibles panels as activatable regions to the EyeX host.
 procedure TMainForm.UpdateActivatableRegions;
 var
   Areas : TActivatableRegions;
@@ -203,10 +206,6 @@ begin
   with AreaPanels do NullEnable := not NullEnable
 end;
 
-
-
-
-// event handler invoked when a region has received the activation focus.
 procedure TMainForm.OnGotActivationFocus(var Msg: TMessage);
 var id: UINT_PTR;
 begin

@@ -1,12 +1,20 @@
-﻿unit uAreaTobii;
+﻿{*******************************************************}
+{                                                       }
+{             08/2020  MaxiDonkey  Library              }
+{                                                       }
+{*******************************************************}
+
+unit uAreaTobii;
 
 interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, EyeXHost, Vcl.ExtCtrls, uEyeXThread,
-  Winapi.mmSystem, Winapi.shellapi, SendKey32, KeysDef, EliteBindingsTools, Clipbrd,
-  uXMLDico, Datasnap.DBClient, uEliteManager, uStatusReader;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Winapi.mmSystem, Winapi.shellapi,
+  Datasnap.DBClient, Clipbrd,
+  { Spec }
+  SendKey32, KeysDef, EliteBindingsTools, uXMLDico, uEliteManager, uStatusReader, EyeXHost,
+  uEyeXThread;
 
 type
   TKeyboardContext = class;

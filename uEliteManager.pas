@@ -1,12 +1,18 @@
+{*******************************************************}
+{                                                       }
+{             08/2020  MaxiDonkey  Library              }
+{                                                       }
+{*******************************************************}
+
 unit uEliteManager;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StrCopyUtils, uRegistry, StrUtils,
-
-  KeysDef,
+  Dialogs, StrUtils,
+  {Spec}
+  StrCopyUtils, uRegistry, KeysDef,
   {Elite bindings}
   EliteBindingsTools, uStatusReader;
 

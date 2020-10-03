@@ -1,11 +1,11 @@
 {*******************************************************}
 {                                                       }
-{           MaxiDonkey Runtime Library                  }
+{                MaxiDonkey  Library                    }
 {                                                       }
 {         Elite Dangerous Functions interface           }
 {         Bindings tools for Custom.3.0.Binds           }
 {                                                       }
-{            08/2020 - copyleft GNU licence             }
+{                08/2020 - copyleft                     }
 {                                                       }
 {*******************************************************}
 
@@ -87,9 +87,10 @@ unit EliteBindingsTools;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes,
-  Graphics, Controls, Forms, Dialogs, ExtCtrls, StdCtrls,
-  uRegistry, StrCopyUtils, Math;
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls, StdCtrls, Math,
+  {Spec}
+  uRegistry, StrCopyUtils;
 
 const
   KEYEVENTF_KEYDOWN  = 0;
