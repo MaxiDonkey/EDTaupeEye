@@ -3,9 +3,9 @@ Elite Dangerous Tool (using Tobii Eye trackers to play with Elite  Dangerous) Fr
 
 **Project in progress** [123-------]
 
-## **Abstract**
+## **Abstract**   
 
-- **EDTaupeEye** is an interface that allows you to use the **Tobii Eye Trackers** to play **[Elite Dangerous](https://www.elitedangerous.com)**. 
+- **EDTaupeEye** is an interface that allows you to use the **[Tobii Eye Trackers](https://gaming.tobii.com/product/eye-tracker-5)** to play **[Elite Dangerous](https://www.elitedangerous.com)**. 
 The overlay splits the screen into multiple areas that can be activated individually using gazing 
 and blinking to simulate a mouse click.
 
@@ -25,6 +25,8 @@ of changes it has made to the file.
 [Menus manipulations](https://github.com/MaxiDonkey/EDTaupeEye/tree/master/img/edte_img3mini.png)
 
 [Using keyboard](https://github.com/MaxiDonkey/EDTaupeEye/tree/master/img/edte_img4mini.png)
+
+
 
 
 
