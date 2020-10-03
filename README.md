@@ -5,7 +5,7 @@ Elite Dangerous Tool (using Tobii Eye trackers to play with Elite  Dangerous) Fr
 
 ## **Abstract**
 
-- **EDTaupeEye** is an interface that allows you to use the **Tobii Eye Trackers** to play **Elite Dangerous**. 
+- **EDTaupeEye** is an interface that allows you to use the **Tobii Eye Trackers** to play **[Elite Dangerous](https://www.elitedangerous.com)**. 
 The overlay splits the screen into multiple areas that can be activated individually using gazing 
 and blinking to simulate a mouse click.
 
