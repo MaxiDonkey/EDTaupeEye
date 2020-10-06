@@ -17,10 +17,14 @@ uses
   uEyeXThread;
 
 type
+  TKindDisplay = (kd_none, kd_menu, kd_drive, kd_fss, kd_saa, kd_galaxymap, kd_systemmap,
+                  kd_function, kd_pause, kd_mainmenu, kd_elitemenu, kd_keyboard, kd_params);
+
   TKeyboardContext = class;
   TEliteContext = class;
 
   TKeyboardKind    = (kk_alpha, kk_num, kk_special, kk_navigation, kk_critik);
+  TKindMapCall     = (kmc_none, kmc_galaxy, kmc_system);
   TContextNotify   = procedure of object;
   TGearTypeNotify  = procedure (const Mode: TLandingGearType) of object;
   TCockpitNotify   = procedure (const Mode : TCockpitModeType) of object;
@@ -137,11 +141,8 @@ type
     procedure AssignFunc(const Index: Integer);
   private
     { --- Ascesseurs / Mutateurs }
-    function  GetElm: TEliteManager;
     function  GetStep: Integer;
     procedure SetStep(const Value: Integer);
-    function  GetCurrContextTag: Integer;
-    procedure SetCurrContextTag(const Value: Integer);
     function  GetIndexFunc: Integer;
     procedure SetIndexFunc(const Value: Integer);
     function  GetIndexMode: Integer;
@@ -166,12 +167,24 @@ type
     procedure SetSubACSIndex(const Value: Integer);
     function  GetSlideAssist: Boolean;
     procedure SetSlideAssist(const Value: Boolean);
-    function  GetKeyBoardSender: Integer;
-    procedure SetKeyBoardSender(const Value: Integer);
     function  GetIndexDSDMode: Integer;
     procedure SetIndexDSDMode(const Value: Integer);
     function  GetSubDSDIndex: Integer;
     procedure SetSubDSDIndex(const Value: Integer);
+    function  GetStateBeforePause: TKindDisplay;
+    procedure SetStateBeforePause(const Value: TKindDisplay);
+    function  GetCurrentDisplay: TKindDisplay;
+    procedure SetCurrentDisplay(const Value: TKindDisplay);
+    function  GetDisplayBeforeGalaxyMap: TKindDisplay;
+    procedure SetDisplayBeforeGalaxyMap(const Value: TKindDisplay);
+    function  GetMapCalled: TKindMapCall;
+    procedure SetMapCalled(const Value: TKindMapCall);
+    function  GetDisplayBeforeSystemMap: TKindDisplay;
+    procedure SetDisplayBeforeSystemMap(const Value: TKindDisplay);
+    function  GetDisplayBeforeKeyboard: TKindDisplay;
+    procedure SetDisplayBeforeKeyboard(const Value: TKindDisplay);
+    function  GetComPanelOpened: Boolean;
+    procedure SetComPanelOpened(const Value: Boolean);
   public
     procedure Step_display;
     procedure Pause_display;
@@ -201,6 +214,7 @@ type
 
     { --- Elite main function notigy actions }
     procedure PauseBack;
+    procedure PauseFunctionBack;
     procedure PauseEnable;
     procedure DoTarget12h;
     procedure DoAutoBreak;
@@ -229,7 +243,6 @@ type
       Index: Integer); overload;
     procedure DoGMSlide;
     procedure DoGMSteps;
-    procedure DoGMMenu;
     procedure DoGMGoHome;
     procedure DoGMBack;
     procedure DoGMAllSlide;
@@ -288,10 +301,12 @@ type
     procedure DoDSDViewChange;
     procedure DoDSDPitchDown;
     procedure DoDSDFire;
+    { --- Check if in vehicle }
+    function IsFlying:Boolean;
+    { --- Check if map opened }
+    function IsMapOpened:Boolean;
 
-    property Elm: TEliteManager read GetElm;
     property Step: Integer read GetStep write SetStep;
-    property CurrContextTag: Integer read GetCurrContextTag write SetCurrContextTag;
     property IndexFunc: Integer read GetIndexFunc write SetIndexFunc;
     { --- Indexes for Ship drive }
     property IndexMode: Integer read GetIndexMode write SetIndexMode;
@@ -311,10 +326,20 @@ type
     property SubDSDIndex: Integer read GetSubDSDIndex write SetSubDSDIndex;
     { --- Time slide off }
     property SlideOffms: Integer read GetSlideOffms write SetSlideOffms;
-    { --- Keyboard Sender }
-    property KeyBoardSender: Integer read GetKeyBoardSender write SetKeyBoardSender;
     { --- Params }
     property SlideAssist: Boolean read GetSlideAssist write SetSlideAssist;
+    { --- Com panel opened }
+    property ComPanelOpened: Boolean read GetComPanelOpened write SetComPanelOpened;
+    { --- Kind of display before action }
+    property DisplayBefore: TKindDisplay read GetStateBeforePause write SetStateBeforePause;
+    property DisplayBeforeGalaxyMap: TKindDisplay read GetDisplayBeforeGalaxyMap write SetDisplayBeforeGalaxyMap;
+    property DisplayBeforeSystemMap: TKindDisplay read GetDisplayBeforeSystemMap write SetDisplayBeforeSystemMap;
+    property DisplayBeforeKeyboard: TKindDisplay read GetDisplayBeforeKeyboard write SetDisplayBeforeKeyboard;
+    { --- Current kind od display }
+    property CurrentDisplay: TKindDisplay read GetCurrentDisplay write SetCurrentDisplay;
+    { --- Map is call }
+    property MapCalled: TKindMapCall read GetMapCalled write SetMapCalled;
+
 
     constructor Create(const AOwner: TAreaTobii);
   end;
@@ -383,6 +408,8 @@ type
     procedure DoAlphaRight;
     procedure DoAlphaLeft;
     procedure DoKeyBoardBack;
+    procedure DoMainKeyBoardLaunch;
+    procedure DoParametersLaunch;
     { --- State indicator managment }
     procedure DisplaySpecial(AIndex: Integer);
     procedure DisplayNumpad;
@@ -558,7 +585,7 @@ end;
 procedure TAreaTobii.DoLaunchElite;
 begin
   with Context, FEliteManager, FEliteStatus, Elite do begin
-    CurrContextTag := 0;
+    CurrentDisplay := kd_elitemenu;
     UpdateZone( Context_Elite );
     EliteForeGround;
     FunctionSound
@@ -582,12 +609,12 @@ begin
    with Context, Elite do case Atag of
      { --- Main actions }
      91000 : Application.MainForm.Close;
-     91001 : UpdateZone( Context_Keyboard );
+     91001 : DoMainKeyBoardLaunch;
      91002 : ;
      91003 : ; //DataDico;
      91004 : DoLaunchElite;
      91005 : ;
-     91006 : UpdateZone( Context_Parameters );
+     91006 : DoParametersLaunch;
      91007 : DoKeyBoardBack;
      { --- Keyboard actions }
      91008..91156 : KeyboardNotify(ATag);
@@ -1304,12 +1331,19 @@ procedure TKeyboardContext.DoKeyBoardBack;
 begin
   with FOwner, FElite, FEliteManager, FContext do begin
     Border := False;
-    case KeyBoardSender of
-      0     : MainMenu_display;
-      91580 : Menu_display;
-//      91420 : MapGalaxy;
-//      91450 : MapSystem;
-    end
+    case DisplayBeforeKeyboard of
+      kd_menu     : Menu_display;
+      else MainMenu_display;
+    end;
+    DisplayBeforeKeyboard := kd_none
+  end
+end;
+
+procedure TKeyboardContext.DoMainKeyBoardLaunch;
+begin
+  with FOwner, FContext, FElite do begin
+    CurrentDisplay := kd_keyboard;
+    UpdateZone( Context_Keyboard );
   end
 end;
 
@@ -1389,6 +1423,14 @@ procedure TKeyboardContext.DoPageUp;
 begin
   CleanBuffer;
   SendMsgToA('Key_PageUp')
+end;
+
+procedure TKeyboardContext.DoParametersLaunch;
+begin
+  with FOwner, FContext, FElite do begin
+    CurrentDisplay := kd_params;
+    UpdateZone( Context_Parameters )
+  end
 end;
 
 procedure TKeyboardContext.DoPrev;
@@ -1613,7 +1655,7 @@ end;
 procedure TKeyboardContext.MainMenu_display;
 begin
   with FOwner do begin
-    FElite.CurrContextTag := 91007;
+    FElite.CurrentDisplay := kd_mainmenu;
     UpdateZone( Context_MainMenu )
   end
 end;
@@ -1745,7 +1787,7 @@ end;
 
 procedure TEliteContext.ACS_display;
 begin
-  CurrContextTag := 91470;
+  CurrentDisplay := kd_fss;
   FOwner.UpdateZone( Context_ACS )
 end;
 
@@ -1956,9 +1998,15 @@ begin
     ResetAreas;
     BoxUpdate(1, 1, 91596, 'SLIDE',         True, sm_blinkback, False);
     BoxUpdate(1, 2, 91238, Ast,             True, sm_blinkback, False);
-    BoxUpdate(1, 3, 91293, 'SUPERCRUISE',   True, sm_blinkback, False);
-    BoxUpdate(1, 4, 91239, 'FUNC',          True, sm_blinkback, False);
-    BoxUpdate(1, 5, 91294, 'FSD',           True, sm_blinkback, False);
+    if MapCalled in [kmc_galaxy, kmc_system] then begin
+      BoxUpdate(1, 3, 91200, '',              True, sm_blinkback, True);
+      BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True);
+      BoxUpdate(1, 5, 91200, '',              True, sm_blinkback, True);
+    end else begin
+      BoxUpdate(1, 3, 91293, 'SUPERCRUISE',   True, sm_blinkback, False);
+      BoxUpdate(1, 4, 91239, 'FUNC',          True, sm_blinkback, False);
+      BoxUpdate(1, 5, 91294, 'FSD',           True, sm_blinkback, False)
+    end;
     BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 7, 91550, 'BACK',          True, sm_blinkback, False);
 
@@ -2012,8 +2060,13 @@ begin
     BoxUpdate(1, 1, 91209, 'STEEP',         True, sm_blinkback, False);
     BoxUpdate(1, 2, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 4, 91239, 'FUNC',          True, sm_blinkback, False);
-    BoxUpdate(1, 5, 91560, 'KEYBOARD',      True, sm_blinkback, False);
+    if MapCalled in [kmc_galaxy, kmc_system]
+      then BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True)
+      else BoxUpdate(1, 4, 91239, 'FUNC',          True, sm_blinkback, False);
+    { --- TODO Show Keybord with context}
+    if (MapCalled = kmc_galaxy) or ComPanelOpened
+      then BoxUpdate(1, 5, 91560, 'KEYBOARD',      True, sm_blinkback, False)
+      else BoxUpdate(1, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 7, 91550, 'BACK',          True, sm_blinkback, False);
 
@@ -2262,10 +2315,10 @@ begin
     BoxUpdate(1, 1, 91422, 'SLIDE',         True, sm_blinkback, False);
     BoxUpdate(1, 2, 91423, ASt,             True, sm_blinkback, False);
     BoxUpdate(1, 3, 91434, 'ZOOM IN',       True, BtnMode1, False);
-    BoxUpdate(1, 4, 91424, 'MENU',          True, sm_blinkback, False);
+    BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 5, 91438, 'ZOOM OUT',      True, BtnMode1, False);
     BoxUpdate(1, 6, 91425, 'GO HOME',       True, sm_blinkback, False);
-    BoxUpdate(1, 7, 91421, 'BACK 1',        True, sm_blinkback, False);
+    BoxUpdate(1, 7, 91421, 'BACK',          True, sm_blinkback, False);
 
     BoxUpdate(2, 1, 91426, ASt1,            True, sm_blinkback, False);
     BoxUpdate(2, 2, 91200, '',              True, sm_blinkback, True);
@@ -2486,14 +2539,16 @@ end;
 constructor TEliteContext.Create(const AOwner: TAreaTobii);
 begin
   inherited Create;
-  FOwner         := AOwner;
-  Step           := 1;
-  IndexFunc      := 0;
-  IndexMode      := 0;
-  IndexGMMode    := 2;
-  GMAllSlide     := False;
-  KeyBoardSender := 0;
-  SlideAssist    := False;
+  FOwner                := AOwner;
+  Step                  := 1;
+  IndexFunc             := 0;
+  IndexMode             := 0;
+  IndexGMMode           := 2;
+  GMAllSlide            := False;
+  SlideAssist           := False;
+  CurrentDisplay        := kd_mainmenu;
+  MapCalled             := kmc_none;
+  ComPanelOpened        := False;
 end;
 
 procedure TEliteContext.DoACSAnalyse;
@@ -2504,7 +2559,7 @@ end;
 procedure TEliteContext.DoACSBack;
 begin
   with FOwner, FEliteManager do ACSClose;
-  Menu_display
+  Drive_display
 end;
 
 procedure TEliteContext.DoACSGetTarget;
@@ -2620,7 +2675,8 @@ end;
 procedure TEliteContext.DoBack;
 begin
   with FOwner, FEliteManager, FEliteStatus do begin
-    if TGuiType(GuiFocus) = gt_galaxymap then MapGalaxy else UIBack;
+    UIBack;
+    ComPanelOpened := False;
     FContext.FunctionSound
   end
 end;
@@ -2671,14 +2727,15 @@ end;
 
 procedure TEliteContext.DoComPanelShow;
 begin
-  with FOwner, FEliteManager do DoClicUnique(CommsPanel);
+  with FOwner, FEliteManager do CommsPanel;
+  ComPanelOpened := True;
   Menu_display
 end;
 
 procedure TEliteContext.DoDSDBack;
 begin
   with FOwner, FEliteManager do DSDClose;
-  Menu_display
+  Drive_display
 end;
 
 procedure TEliteContext.DoDSDFire;
@@ -2755,7 +2812,13 @@ procedure TEliteContext.DoGMBack;
 begin
   with FOwner, FEliteStatus, FEliteManager do begin
     MapGalaxy;
-    Menu_display
+    ComPanelOpened := False;
+    MapCalled := kmc_none;
+    case DisplayBeforeGalaxyMap of
+      kd_menu  : Menu_display;
+      kd_drive : Drive_display;
+    end;
+    DisplayBeforeGalaxyMap := kd_none
   end
 end;
 
@@ -2792,11 +2855,6 @@ procedure TEliteContext.DoGMLeftRotate;
 begin
   with FOwner, FEliteManager do
     NavLauncher(CamYawLeft, CamYawLeft, IndexGMMode)
-end;
-
-procedure TEliteContext.DoGMMenu;
-begin
-  Menu_display
 end;
 
 procedure TEliteContext.DoGMReward;
@@ -2865,8 +2923,10 @@ begin
     case TGuiType(GuiFOcus) of
       gt_galaxymap,
       gt_commspanel : begin
-        KeyBoardSender := CurrContextTag;
+        DisplayBeforeKeyboard := CurrentDisplay;
+        DisplayBefore         := CurrentDisplay;
         { --- Display KeyBoard }
+        CurrentDisplay := kd_keyboard;
         with FOwner, FContext do UpdateZone( Context_Keyboard )
       end;
     end;
@@ -2881,7 +2941,9 @@ end;
 procedure TEliteContext.DoMapGalaxyShow;
 begin
   with FOwner, EliteManager do begin
-    DoClicUnique(MapGalaxy);
+    DisplayBeforeGalaxyMap := DisplayBefore;
+    MapCalled              := kmc_galaxy;
+    MapGalaxy;
     Menu_display
   end
 end;
@@ -2889,24 +2951,58 @@ end;
 procedure TEliteContext.DoMapSystemShow;
 begin
   with FOwner, EliteManager do begin
-    DoClicUnique(MapSystem);
+    DisplayBeforeSystemMap := DisplayBefore;
+    MapCalled              := kmc_system;
+    MapSystem;
     Menu_display
   end
 end;
 
 procedure TEliteContext.DoNavBack;
-begin
-  with FOwner, FEliteStatus, FEliteManager, FElite do begin
-    if CurrContextTag = 0 then DoLaunchElite
-    else case TGuiType(GuiFocus) of
-      gt_galaxymap : MapGalaxy;
-      gt_systemmap : MapSystem;
-      else begin
-        DoLaunchElite;
-      end
+
+  function BackIfGalaxyMap:Boolean; begin
+    Result := MapCalled = kmc_galaxy;
+    if Result then begin
+      with FOwner, FEliteManager do MapGalaxy;
+      MapCalled := kmc_none;
+      case DisplayBeforeGalaxyMap of
+        kd_drive : Drive_display;
+        else Menu_display;
+      end;
     end
   end;
-end;
+
+  function BackIfSystemMap:Boolean; begin
+    Result := MapCalled = kmc_system;
+    if Result then begin
+      with FOwner, FEliteManager do MapSystem;
+      MapCalled := kmc_none;
+      case DisplayBeforeSystemMap of
+        kd_drive : Drive_display;
+        else Menu_display;
+      end;
+    end
+  end;
+
+  function BackIfFunction:Boolean; begin
+    Result := CurrentDisplay = kd_function;
+    if Result then case DisplayBefore of
+      kd_drive : Drive_display;
+      kd_menu  : Menu_display;
+    end
+  end;
+
+  function BackIfFloor:Boolean; begin
+    Result := CurrentDisplay in [kd_drive, kd_menu];
+    if Result then with FOwner, Felite do DoLaunchElite
+  end;
+
+begin
+  if not BackIfGalaxyMap then
+    if not BackIfSystemMap then
+      if not BackIfFunction then
+        if not BackIfFloor then Menu_display
+end; {DoNavBack}
 
 procedure TEliteContext.DoNavEst;
 begin
@@ -2985,7 +3081,12 @@ procedure TEliteContext.DoSMBack;
 begin
   with FOwner, FEliteStatus, FEliteManager do begin
     MapSystem;
-    Menu_display
+    MapCalled := kmc_none;
+    case DisplayBeforeSystemMap of
+      kd_menu  : Menu_display;
+      kd_drive : Drive_display;
+    end;
+    DisplayBeforeSystemMap := kd_none
   end
 end;
 
@@ -3069,20 +3170,20 @@ end;
 
 procedure TEliteContext.Drive_display;
 begin
-  CurrContextTag := 91590;
+  CurrentDisplay := kd_drive;
   FOwner.UpdateZone( Context_EliteDrive )
 end;
 
 procedure TEliteContext.DSD_display;
 begin
-  CurrContextTag := 91490;
+  CurrentDisplay := kd_saa;
   FOwner.UpdateZone( Context_DSD )
 end;
 
 procedure TEliteContext.EliteNotify(const ATag: Integer);
 begin
   EliteForeGround;
-  with FOwner, Elm do
+  with FOwner, FEliteManager do
   try
     case ATag of
       { --- Areas for Elite 91200....91600 }
@@ -3094,7 +3195,7 @@ begin
       91204 : DoClic(Right, Step);
       91205 : DoClic(PriorSheet, Step);
       91206 : DoClic(NextSheet, Step);
-      91207 : DoClicUnique(UIBack);
+      91207 : begin DoClicUnique(UIBack); ComPanelOpened := False end;
       91208 : DoClicUnique(UISelect);
       91209 : DoClicUnique(Step_display);
       { --- Steps selector }
@@ -3125,7 +3226,7 @@ begin
 
       { --- Functions actions }
       91240 : AssignFunc(0);
-      91241 : DoComPanelShow;                //Top Panel
+      91241 : DoClicUnique(DoComPanelShow);  //Top Panel
       91242 : DoLeftPanelShow;               //Left Panel
       91243 : DoRightPanelShow;              //Right Panel
       91244 : DoRolePanelShow;               //Bottom Panel
@@ -3133,7 +3234,7 @@ begin
       91246 : DoFriendsMenuShow;             //Friends menu
       91247 : DoBackMenuShow;                //Back to menu
       91248 : DoMapSystemShow;               //System map
-      91249 : DoMapGalaxyShow;               //Galaxy map
+      91249 : DoClicUnique(DoMapGalaxyShow); //Galaxy map
 
       91250 : AssignFunc(1);
       91251 : DoClicUnique(LandingGear);     //Landing gear
@@ -3204,7 +3305,7 @@ begin
       91421 : DoClicUnique(DoGMBack);       //Back
       91422 : DoClicUnique(DoGMSlide);      //Slide
       91423 : DoClic(DoGMSteps);            //Steps
-      91424 : DoClicUnique(DoGMMenu);       //Menu
+      91424 : ;//NULL
       91425 : DoClicUnique(DoGMGoHome);     //Go home
       91426 : DoClicUnique(DoGMAllSlide);   //All slide
       91427 : DoClic(DoGMReward);           //Reward
@@ -3245,34 +3346,34 @@ begin
       91476 : DoClicUnique(DoACSHelp);
       91477 : DoClicUnique(DoACSBack);
       91478 : DoClic(DoACSRadioDec);
-      91479 : DoClic(DoACSPitchInc);
+      91479 : DoClic(DoACSPitchDec);
       91480 : DoClic(DoACSRadioInc);
       91481 : DoClic(DoACSYawDec);
       91482 : DoClic(DoACSYawInc);
       91483 : DoClicUnique(DoACSGetTarget);
       91484 : DoClic(DoACSMiniZoomIn);
-      91485 : DoClic(DoACSPitchDec);
+      91485 : DoClic(DoACSPitchInc);
       91486 : DoClic(DoACSMiniZoomOut);
 
       { --- Surface Analyse Area }
       91490 : DSD_display;
-      91491 : DoDSDSlide;
-      91492 : DoDSDSteps;
-      91493 : DoDSDZoomIn;
-      91494 : DoDSDZoomOut;
-      91495 : DoDSDBack;
-      91496 : DoDSDPitchUp;
-      91497 : DoDSDYawLeft;
-      91498 : DoDSDYawRight;
-      91499 : DoDSDViewChange;
-      91500 : DoDSDPitchDown;
-      91501 : DoDSDFire;
+      91491 : DoClic(DoDSDSlide);
+      91492 : DoClic(DoDSDSteps);
+      91493 : DoClic(DoDSDZoomIn);
+      91494 : DoClic(DoDSDZoomOut);
+      91495 : DoClicUnique(DoDSDBack);
+      91496 : DoClic(DoDSDPitchUp);
+      91497 : DoClic(DoDSDYawLeft);
+      91498 : DoClic(DoDSDYawRight);
+      91499 : DoClicUnique(DoDSDViewChange);
+      91500 : DoClic(DoDSDPitchDown);
+      91501 : DoClicUnique(DoDSDFire);
 
       { --- Sub contexts }
       91550 : DoNavBack;
       91560 : DoKeyBoardShow;
       91570 : DoClicUnique(Switch);
-      91571 : DoClic(PauseBack);
+      91571 : DoClic(PauseFunctionBack);
       91580 : Menu_display;
       91581 : DoClicUnique(Menu_display);
       91590 : Drive_display;
@@ -3288,6 +3389,8 @@ end;
 
 procedure TEliteContext.Func_display;
 begin
+  if CurrentDisplay <> kd_function then DisplayBefore := CurrentDisplay;
+  CurrentDisplay := kd_function;
   with FOwner do begin
     UpdateZone( Context_Func );
     case IndexFunc of
@@ -3303,18 +3406,33 @@ end;
 
 procedure TEliteContext.GalaxyMap_display;
 begin
-  CurrContextTag := 91420;
+  CurrentDisplay := kd_galaxymap;
   FOwner.UpdateZone( Context_GalaxyMap )
 end;
 
-function TEliteContext.GetCurrContextTag: Integer;
+function TEliteContext.GetComPanelOpened: Boolean;
 begin
-  Result := KeyReadInt(ParamKey, 'CurrContextTag', 91007)
+  Result := KeyReadBoolean(ParamKey, 'ComPanelOpened')
 end;
 
-function TEliteContext.GetElm: TEliteManager;
+function TEliteContext.GetCurrentDisplay: TKindDisplay;
 begin
-  Result := FOwner.FEliteManager
+  Result := TKindDisplay( KeyReadInt(ParamKey, 'CurrentDisplay', 0))
+end;
+
+function TEliteContext.GetDisplayBeforeGalaxyMap: TKindDisplay;
+begin
+  Result := TKindDisplay( KeyReadInt(ParamKey, 'DisplayBeforeGalaxyMap', 0))
+end;
+
+function TEliteContext.GetDisplayBeforeKeyboard: TKindDisplay;
+begin
+  Result := TKindDisplay( KeyReadInt(ParamKey, 'DisplayBeforeKeyboard', 0) )
+end;
+
+function TEliteContext.GetDisplayBeforeSystemMap: TKindDisplay;
+begin
+  Result := TKindDisplay( KeyReadInt(ParamKey, 'DisplayBeforeSystemMap', 0 ) )
 end;
 
 function TEliteContext.GetGMAllSlide: Boolean;
@@ -3352,9 +3470,9 @@ begin
   Result := KeyReadInt(ParamKey, 'IndexSMMode', 0)
 end;
 
-function TEliteContext.GetKeyBoardSender: Integer;
+function TEliteContext.GetMapCalled: TKindMapCall;
 begin
-  Result := KeyReadInt(ParamKey, 'KeyBoardSender', 0)
+  Result := TKindMapCall( KeyReadInt(ParamKey, 'MapCalled', 0) )
 end;
 
 function TEliteContext.GetSlideAssist: Boolean;
@@ -3365,6 +3483,11 @@ end;
 function TEliteContext.GetSlideOffms: Integer;
 begin
   Result := KeyReadInt(ParamKey, 'SlideOffms', 2)
+end;
+
+function TEliteContext.GetStateBeforePause: TKindDisplay;
+begin
+  Result := TKindDisplay( KeyReadInt(ParamKey, 'StateBeforePause', 0))
 end;
 
 function TEliteContext.GetStep: Integer;
@@ -3397,10 +3520,32 @@ begin
   Result := KeyReadInt(ParamKey, 'SubSMIndex', 2)
 end;
 
+function TEliteContext.IsFlying: Boolean;
+begin
+  with FOwner, FEliteStatus do begin
+    { --- not docked and not landed }
+    Result := not (Landed or Docked);
+    { --- is in ship or SRV or fighter}
+    Result := Result and (InMainShip or InSrv or InFighter);
+    { --- not GalaxyMap or not SystemMap opened }
+//    Result := Result and not IsMapOpened   //???
+  end
+end;
+
+function TEliteContext.IsMapOpened: Boolean;
+begin
+  with FOwner, FEliteStatus do
+    case TGuiType(GuiFocus) of
+      gt_galaxymap,
+      gt_systemmap : Result := True;
+      else Result := false;
+    end
+end;
+
 procedure TEliteContext.Menu_display;
 begin
-  CurrContextTag := 91580;
   Step           := 1;
+  CurrentDisplay := kd_menu;
   FOwner.UpdateZone( Context_EliteMenu )
 end;
 
@@ -3465,30 +3610,73 @@ begin
 end;
 
 procedure TEliteContext.PauseBack;
+{ --- with Elite}
+
+  procedure DriveCase; begin
+    case MapCalled of
+      kmc_none   : Drive_display;
+      kmc_galaxy : GalaxyMap_display;
+      kmc_system : SystemMap_display;
+    end
+  end;
+
 begin
-  with FOwner, Context do case CurrContextTag of
-    91007 : MainMenu_display;
-    91420 : GalaxyMap_display;
-    91450 : SystemMap_display;
-    91470 : ACS_display;
-    91580 : Menu_display;
-    91590 : Drive_display;
+  with FOwner, Context do case DisplayBefore of
+    kd_mainmenu  : MainMenu_display;
+    kd_menu      : Menu_display;
+    kd_drive     : DriveCase;
+    kd_fss       : ACS_display;
+    kd_saa       : DSD_display;
+    kd_galaxymap : GalaxyMap_display;
+    kd_systemmap : SystemMap_display;
   end
-end;
+end; {PauseBack;}
 
 procedure TEliteContext.PauseEnable;
 begin
   Pause_display
 end;
 
+procedure TEliteContext.PauseFunctionBack;
+{ --- not with Elite }
+begin
+  if IsMapOpened then Menu_display
+  else case DisplayBefore of
+         kd_drive : Drive_display;
+         kd_menu  : Menu_display;
+       end
+end;
+
 procedure TEliteContext.Pause_display;
 begin
+  DisplayBefore  := CurrentDisplay;
+  CurrentDisplay := kd_pause;
   FOwner.UpdateZone( Context_Pause )
 end;
 
-procedure TEliteContext.SetCurrContextTag(const Value: Integer);
+procedure TEliteContext.SetComPanelOpened(const Value: Boolean);
 begin
-  KeyWrite(ParamKey, 'CurrContextTag', Value)
+  KeyWrite(ParamKey, 'ComPanelOpened', Value)
+end;
+
+procedure TEliteContext.SetCurrentDisplay(const Value: TKindDisplay);
+begin
+  KeyWrite(ParamKey, 'CurrentDisplay', Integer(Value))
+end;
+
+procedure TEliteContext.SetDisplayBeforeGalaxyMap(const Value: TKindDisplay);
+begin
+  KeyWrite(ParamKey, 'DisplayBeforeGalaxyMap', Integer(Value))
+end;
+
+procedure TEliteContext.SetDisplayBeforeKeyboard(const Value: TKindDisplay);
+begin
+  KeyWrite(ParamKey, 'DisplayBeforeKeyboard', Integer(Value) )
+end;
+
+procedure TEliteContext.SetDisplayBeforeSystemMap(const Value: TKindDisplay);
+begin
+  KeyWrite(ParamKey, 'DisplayBeforeSystemMap', Integer(Value) )
 end;
 
 procedure TEliteContext.SetGMAllSlide(const Value: Boolean);
@@ -3526,9 +3714,9 @@ begin
   KeyWrite(ParamKey, 'IndexSMMode', Value)
 end;
 
-procedure TEliteContext.SetKeyBoardSender(const Value: Integer);
+procedure TEliteContext.SetMapCalled(const Value: TKindMapCall);
 begin
-  KeyWrite(ParamKey, 'KeyBoardSender', Value)
+  KeyWrite(ParamKey, 'MapCalled', Integer(Value) )
 end;
 
 procedure TEliteContext.SetSlideAssist(const Value: Boolean);
@@ -3539,6 +3727,11 @@ end;
 procedure TEliteContext.SetSlideOffms(const Value: Integer);
 begin
   KeyWrite(ParamKey, 'SlideOffms', Value)
+end;
+
+procedure TEliteContext.SetStateBeforePause(const Value: TKindDisplay);
+begin
+  KeyWrite(ParamKey, 'StateBeforePause', Integer(Value))
 end;
 
 procedure TEliteContext.SetStep(const Value: Integer);
@@ -3604,21 +3797,22 @@ end;
 
 procedure TEliteContext.Switch;
 begin
-  with FOwner, FEliteStatus do case CurrContextTag of
-    91580   : case TGuiType(GuiFocus) of
-      gt_galaxymap : GalaxyMap_display;
-      gt_systemmap : SystemMap_display;
-      else if not Landed and not Docked then Drive_display;
-    end;
-    91590,
-    91420,
-    91450   : Menu_display;
+  if MapCalled <> kmc_none then begin
+      case MapCalled of
+        kmc_galaxy : if CurrentDisplay = kd_galaxymap then Menu_display else GalaxyMap_display;
+        kmc_system : if CurrentDisplay = kd_systemmap then Menu_display else SystemMap_display;
+      end
+  end else begin
+    case CurrentDisplay of
+      kd_menu : drive_display;
+      else Menu_display
+    end
   end
 end;
 
 procedure TEliteContext.SystemMap_display;
 begin
-  CurrContextTag := 91450;
+  CurrentDisplay := kd_systemmap;
   FOwner.UpdateZone( Context_System_Map )
 end;
 
