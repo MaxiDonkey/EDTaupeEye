@@ -327,7 +327,6 @@ type
 
     constructor Create;
     destructor Destroy; override;
-  published
   end;
 
   TEliteManager = class(TCustomEliteManager)
@@ -336,7 +335,6 @@ type
     class procedure TagAssign(const Value: string);
     class procedure KeyInventoryAssign(const Value: TKeyInventory);
     class procedure Finalize;
-  published
   end;
 
 var
@@ -1532,7 +1530,7 @@ end;
 
 procedure TCustomEliteManager.ShieldCell;
 begin
-  if not EliteStatus.ShieldsUp then
+//  if EliteStatus.ShieldsUp then
     FKeyInventory.KeyTrigger_( 'UseShieldCell', WITH_KEYUP)
 end;
 

@@ -1204,14 +1204,6 @@ var
 
 
 
-
-
-
-
-
-
-
-
 implementation
 
 uses
@@ -1220,14 +1212,13 @@ uses
 function IsEliteRunning: Boolean;
 begin
   if HElite = 0 then HElite := FindWindow( PWideChar(ELITE_CLASS), nil );
-  Result :=  HElite <> 0;
+  Result :=  HElite <> 0
 end;
 
 procedure EliteForeGround;
 begin
   if HElite = 0 then HElite := FindWindow( PWideChar(ELITE_CLASS), nil );
-  SetForegroundWindow( HElite );
-//  Sleep(30)   { --- Attention pas pour le tobii }
+  SetForegroundWindow( HElite )
 end;
 
 function SetMessage(const Messages: array of string):string;
@@ -1299,7 +1290,7 @@ var
   Buffer: string;
 begin
   Buffer := TBindsArrayTools.Extract(Src, Balise);
-  Result := AnsiPos('Primary', Buffer) > 0;
+  Result := AnsiPos('Primary', Buffer) > 0
 end;
 
 function OrderExchange(const ASt: string; Order: TKeyOrder):string;
@@ -1308,7 +1299,7 @@ begin
   case Order of
     ko_primary   : while AnsiPos('Primary',   Result) > 0 do Result := StrUtils.ReplaceStr(Result,'Primary',   'Secondary');
     ko_secondary : while AnsiPos('Secondary', Result) > 0 do Result := StrUtils.ReplaceStr(Result,'Secondary', 'Primary');
-  end;
+  end
 end;
 
 function ExtractBalises(const Src: string; Full: Boolean):string;
@@ -1412,7 +1403,7 @@ begin
   Duplicatas[kdt_PitchUp] := DPitchUp;
   Duplicatas[kdt_PitchDown] := DPitchDown;
   Duplicatas[kdt_YawRight] := DYawRight;
-  Duplicatas[kdt_YawLeft] := DYawLeft;
+  Duplicatas[kdt_YawLeft] := DYawLeft
 end;
 
 procedure PreferenceKeysInitialize;
@@ -1450,7 +1441,7 @@ begin
   PreferenceKeys[kdt_PitchUp] := VK_PRIOR;
   PreferenceKeys[kdt_PitchDown] := VK_NEXT;
   PreferenceKeys[kdt_YawRight] := VK_END;
-  PreferenceKeys[kdt_YawLeft] := VK_HOME;
+  PreferenceKeys[kdt_YawLeft] := VK_HOME
 end;
 
 function DuplicataItemsCount(const Value: TKeyDuplicataType):Integer;
@@ -1849,10 +1840,8 @@ function EliteKeyToScanValue(const Value: string):SmallInt;
 begin
   Result := 0;
   if IsEliteKey( Value ) then
-    Result := EliteKeyToScanValue( GetEliteKey( Value ) );
+    Result := EliteKeyToScanValue( GetEliteKey( Value ) )
 end;
-
-
 
 function EliteKeyToScanValue(const Value: TEliteKeyType):SmallInt;
 begin
@@ -1965,8 +1954,8 @@ begin
       Mouse_3              : Result := VK_MBUTTON;
       Mouse_4              : Result := VK_XBUTTON1;
       Mouse_5              : Result := VK_XBUTTON2;
-      else Result := 0;
-  end;
+      else Result := 0
+  end
 end;
 
 
@@ -2081,7 +2070,7 @@ begin
     345 : Result := 'Key_Y';
     346 : Result := 'Key_Z';
     else  Result := EmptyStr
-  end;
+  end
 end;
 
 function IdKeyToStr(const IdKey: Cardinal):string;
@@ -2094,7 +2083,7 @@ begin
   s2     := KeyScanToEliteString(Func1);
   s3     := KeyScanToEliteString(Func2);
   if s3 <> EmptyStr then s2     := Format('%s + %s', [s2, s3]);
-  if s2 <> emptyStr then Result := Format('%s + %s', [s2, Result]);
+  if s2 <> emptyStr then Result := Format('%s + %s', [s2, Result])
 end;
 
 function GetKeyNext(const Value:TEliteKeyType):TEliteKeyType;
@@ -2138,13 +2127,13 @@ end;
 procedure TBindCategoryManager.CheckIndex(const index: Integer);
 begin
   if (index < 0) or (index > High(TBindCategoriesArea)) then
-    raise Exception.CreateFmt('%d hors limites', [index]);
+    raise Exception.CreateFmt('%d hors limites', [index])
 end;
 
 constructor TBindCategoryManager.Create;
 begin
   inherited Create;
-  FMCR := MCR;
+  FMCR := MCR
 end;
 
 function TBindCategoryManager.GetCount: Integer;
@@ -2155,7 +2144,7 @@ end;
 function TBindCategoryManager.GetString(index: Integer): string;
 begin
   CheckIndex(index);
-  Result := FMCR[index];
+  Result := FMCR[index]
 end;
 
 { TBindsArrayTools }
@@ -2222,7 +2211,7 @@ begin
     Result := BindsXMLtext_
   finally
     Free
-  end;
+  end
 end;
 
 constructor TBindsArrayTools.Create;
@@ -2252,7 +2241,7 @@ begin
   FGalaxyMap               := GalaxyMap;
   FCamSystem               := CamSystem;
   FGalnetReader            := GalnetReader;
-  FCamFree                 := CamFree;
+  FCamFree                 := CamFree
 end;
 
 class function TBindsArrayTools.Extract(const ASource,
@@ -2264,7 +2253,7 @@ begin
     Result := ExtractXMLByBind(BindValue)
   finally
     Free
-  end;
+  end
 end;
 
 
@@ -2307,7 +2296,7 @@ begin
     Result := Trim( Text )
   finally
     Free
-  end;
+  end
 end;
 
 procedure TBindsArrayTools.SetSource(const Value: string);
@@ -2325,7 +2314,7 @@ begin
     Result := Trim( Text )
   finally
     Free
-  end;
+  end
 end;
 
 { TKeyItemInventory }
@@ -2343,14 +2332,14 @@ begin
   end;
   case Order of
     ko_primary   : Indic := IndexStr(FPrimary.MainKey.Device,   ['Keyboard', 'Mouse']) > -1;
-    else Indic := IndexStr(FSecondary.MainKey.Device, ['Keyboard', 'Mouse']) > -1;
+    else Indic := IndexStr(FSecondary.MainKey.Device, ['Keyboard', 'Mouse']) > -1
   end;
   with FOwner do if Indic then begin
     { --- Eviter les doublons si le primary et le secondary sont compatibles avec le clavier }
     if FIndexCatalog.indexOf(Bind) = -1 then begin
       FIndexCatalog.Add(Bind);
-      FCatalog.Add( ASt );
-    end;
+      FCatalog.Add( ASt )
+    end
   end
 end;
 
@@ -2373,7 +2362,7 @@ begin
     ko_primary    : if IsJoyUsed(FPrimary)   then Exit;
     ko_secondary  : if IsJoyUsed(FSecondary) then Exit;
   end;
-  with FOwner, FHashTable do if FHashTable.IndexOf(Ids) = -1 then Add(Ids);
+  with FOwner, FHashTable do if FHashTable.IndexOf(Ids) = -1 then Add(Ids)
 end;
 
 procedure TKeyItemInventory.AssignToKey(ACount: Byte;
@@ -2392,7 +2381,7 @@ end;
 procedure TKeyItemInventory.CheckCombination;
 begin
   if IsCombinationJoyBusy then AddToErrors('(0002) Joystick full');
-  if IsCombinatonFree     then AddToErrors('(0003) Free');
+  if IsCombinatonFree     then AddToErrors('(0003) Free')
 end;
 
 procedure AddToStringList(const List: TStrings; const ASt: string);
@@ -2408,7 +2397,7 @@ begin
     end;
   finally
     Free
-  end;
+  end
 end;
 
 function TKeyItemInventory.ConcatXML: string;
@@ -2420,7 +2409,7 @@ begin
     AddToStringList(OutStr, FXMLPrimary);
     AddToStringList(OutStr, FXMLSecondary);
     if FToggle then AddToStringList(OutStr, FXMLToggleOn);
-    Result := OutStr.Text;
+    Result := OutStr.Text
   finally
     OutStr.Free
   end;
@@ -2449,13 +2438,13 @@ function TKeyItemInventory.EliteKeyToKeyBoard(
       {--- Traduire les touches "modifier" si nécessaire }
       if Count > 1 then with KeyResult do begin
         Func1 := EliteKeyToScanValue(Modifier1.Key);
-        if Count > 2 then Func2 := EliteKeyToScanValue(Modifier2.Key);
+        if Count > 2 then Func2 := EliteKeyToScanValue(Modifier2.Key)
       end
     end
   end;
 
   function KeyBoardProcess: Boolean; begin
-    Result := Process(False);
+    Result := Process(False)
   end;
 
   function MouseProcess: Boolean; begin
@@ -2467,8 +2456,8 @@ begin
     0  : Result := KeyBoardProcess;
     1  : Result := MouseProcess;
     2  : Result := False;
-    else Result := True;
-  end;
+    else Result := True
+  end
 end; {EliteKeyToKeyBoard}
 
 procedure TKeyItemInventory.ExtractData;
@@ -2485,7 +2474,7 @@ begin
   AddToCatalog(ko_secondary);
   if not PrimaryAvailable then AddToHashTable(ko_primary);
   if not SecondaryAvailable then AddToHashTable(ko_secondary);
-  CheckCombination;
+  CheckCombination
 end;
 
 procedure TKeyItemInventory.ExtractPrimary;
@@ -2513,7 +2502,7 @@ begin
   {Second modifier}
   if AnsiPos('Modifier', ASt) > 0 then begin
     GetDeviceKey(ASt, ADevice, AKey);
-    AssignToKey(3, FPrimary, FPrimary.Modifier2, ADevice, AKey);
+    AssignToKey(3, FPrimary, FPrimary.Modifier2, ADevice, AKey)
   end
 end;
 
@@ -2546,8 +2535,8 @@ begin
   {Second modifier}
   if AnsiPos('Modifier', ASt) > 0 then begin
     GetDeviceKey(ASt, ADevice, AKey);
-    AssignToKey(3, FSecondary, FSecondary.Modifier2, ADevice, AKey);
-  end;
+    AssignToKey(3, FSecondary, FSecondary.Modifier2, ADevice, AKey)
+  end
 end;
 
 procedure TKeyItemInventory.ExtractToggle;
@@ -2591,7 +2580,7 @@ begin
         Func2      := GetKeyFuncNext(Func2);
         if func2 = Key_LeftAlt then begin
           Result := False;
-          Break;
+          Break
         end
       end
     end;
@@ -2599,8 +2588,8 @@ begin
       then NewSignal := IdSigning(Trans(Key), Trans(Func1), Trans(Func2))
       else NewSignal := IdSigning(Trans(Key), Trans(Func1), 0);
     Result := FOwner.FHashTable.IndexOf(Format('%d', [NewSignal])) = -1;
-    Again := not Result;
-  end;
+    Again := not Result
+  end
 end; {FindFreeCombination}
 
 procedure TKeyItemInventory.GetDeviceKey(const Src: string; var Device,
@@ -2609,7 +2598,7 @@ begin
   Key    := GetAfterStr(Src,    'Key="');
   Key    := GetBeforStr(Key,    '"');
   Device := GetAfterStr(Src,    'Device="');
-  Device := GetBeforStr(Device, '"');
+  Device := GetBeforStr(Device, '"')
 end;
 
 function TKeyItemInventory.GetPrimaryAvailable: Boolean;
@@ -2683,7 +2672,7 @@ begin
     Result := Text
   finally
     Free
-  end;
+  end
 end;
 
 function TKeyItemInventory.GetUsable: Boolean;
@@ -2710,7 +2699,7 @@ begin
             (FSecondary.MainKey.Device = '{NoDevice}');
   Indic1 := IsJoyUsed(FPrimary) and (FSecondary.MainKey.Device = '{NoDevice}');
   Indic2 := (FSecondary.MainKey.Device = '{NoDevice}') and IsJoyUsed(FSecondary);
-  Result := Result or Indic1 or Indic2;
+  Result := Result or Indic1 or Indic2
 end;
 
 function TKeyItemInventory.IsJoyUsed(const Value: TRecordKeySection): Boolean;
@@ -2734,10 +2723,10 @@ begin
       FSource := Text;
       Result  := Text;
       SaveToFile( TEMP_CUSTOM_FILE );
-      SetCustomModified;
+      SetCustomModified
     finally
       Free
-    end;
+    end
   end;
 
 end; {ReplaceSourceXML}
@@ -2762,8 +2751,7 @@ var
   function CleanStr(const ASt: string):string; var i: Integer; begin
   { --- Retirer les caractères "tab" avant d'imposer l'indentation }
     Result := EmptyStr;
-    for i := 1 to Length(ASt) do
-      if ASt[i] <> #9 then Result := Result + ASt[i]
+    for i := 1 to Length(ASt) do if ASt[i] <> #9 then Result := Result + ASt[i]
   end;
 
 begin
@@ -2782,10 +2770,10 @@ begin
     end;
     Insert(0, Format(#9'<%s>', [Bind]));
     Add( Format(#9'</%s>', [Bind]));
-    Result := Trim(Text);
+    Result := Trim(Text)
   finally
     Free
-  end;
+  end
 end; {XMLIndentation}
 
 { TKeyInventory }
@@ -2797,9 +2785,9 @@ begin
   Item   := TKeyItemInventory.Create(Self);
   with Item do begin
     Bind      := Binds;
-    XMLSource := TBindsArrayTools.Extract(FSource, Binds);
+    XMLSource := TBindsArrayTools.Extract(FSource, Binds)
   end;
-  Result := AddObject(Binds, Item);
+  Result := AddObject(Binds, Item)
 end;
 
 function BuildXMLKey(const BaliseName: string; Key, Func1, Func2: string;
@@ -2822,10 +2810,10 @@ begin
         Add( Format(#9'<Modifier Device="Keyboard" Key="%s"/>', [Func2]) );
       Add( Format('</%s>', [BaliseName]) );
     end;
-    Result := Text;
+    Result := Text
   finally
     Free
-  end;
+  end
 end;
 
 procedure TKeyInventory.AssignToFree;
@@ -2866,7 +2854,7 @@ begin
       { --- Réinitialise la keyItem courante }
       SetXmlSource( ConcatXML );
       { --- Modifier le fichier source }
-      ReplaceSourceXML;
+      ReplaceSourceXML
     end
   end
 end;
@@ -2875,7 +2863,7 @@ end;
 procedure TKeyInventory.BuildLocalSaveFolder;
 begin
   if not DirectoryExists(LOCAL_SAVE) then
-    try MkDir(LOCAL_SAVE) except end;
+    try MkDir(LOCAL_SAVE) except end
 end;
 
 procedure TKeyInventory.BuildMutiUsageKeyList;
@@ -2917,7 +2905,7 @@ begin
 
   Result := BuildXMLKey(Balise, KeyScanToEliteString(Key),
     KeyScanToEliteString(Func1),
-    KeyScanToEliteString(Func2), UseTwoFunc, KeyOnly );
+    KeyScanToEliteString(Func2), UseTwoFunc, KeyOnly )
 end;
 
 
@@ -2953,8 +2941,8 @@ var
     if Item.PrimaryAvailable then Result := ko_primary
       else begin
         FErrors.Text := Format('002 - %s : delete one of the joystick or mouse inputs', [Item.FBind]);
-        raise Exception.Create(FErrors.Text);
-      end;
+        raise Exception.Create(FErrors.Text)
+      end
   end;
 
   procedure DoIfAvailaible; begin
@@ -2978,7 +2966,7 @@ var
       { --- Modifier le fichier source }
       ReplaceSourceXML;
       SetMultiUsageModified( True )
-    end;
+    end
   end;
 
   procedure CheckReference; begin
@@ -2988,7 +2976,7 @@ var
     with ItemA do case AOrder of
       ko_primary   : if PrimaryAvailable   then DoIfAvailaible;
       ko_secondary : if SecondaryAvailable then DoIfAvailaible;
-    end;
+    end
   end;
 
   procedure Initialize; begin
@@ -2996,9 +2984,9 @@ var
     ItemB := Item[ToBind];
     if not Assigned(ItemA) or not Assigned(ItemB) then begin
       FErrors.Text := Format('004 - %s vs %s : Incorrect instantiation of doublets', [RefBind, ToBind]);
-      raise Exception.Create(FErrors.Text);
+      raise Exception.Create(FErrors.Text)
     end;
-    CheckReference;
+    CheckReference
   end;
 
   function priVSpri: Boolean; begin
@@ -3035,7 +3023,7 @@ var
         case AOrder of
           ko_primary   : Modified := secVSpri;
           ko_secondary : Modified := secVSsec;
-        end;
+        end
     end;
     with ItemB do if Modified then begin
       { --- Réinitialise la keyItem courante }
@@ -3048,8 +3036,8 @@ var
 
 begin
   Initialize;
-  Update;
-end;
+  Update
+end; {CheckDupicataBinds}
 
 procedure TKeyInventory.Copy_locally;
 var
@@ -3058,10 +3046,8 @@ var
 begin
   FromFile := Format('%s\%s', [GetEliteBindingsFolder, CUSTOM_FILE]);
   ToFile   := Format('%s\%s', [ExtractFileDir(Application.ExeName), TEMP_CUSTOM_FILE]);
-  CopyFile(PChar(FromFile), PChar(ToFile), False);
+  CopyFile(PWideChar(FromFile), PChar(ToFile), False)
 end;
-
-{CheckDupicataBinds}
 
 constructor TKeyInventory.Create;
 begin
@@ -3075,7 +3061,7 @@ begin
   FErrors        := TstringList.Create;
   FDblUsed       := TstringList.Create;
   FHashTable     := TstringList.Create;
-  with FHashTable do Sorted := True;
+  with FHashTable do Sorted := True
 end;
 
 function TKeyInventory.Custom3Exists: Boolean;
@@ -3107,7 +3093,7 @@ end;
 class procedure TKeyInventory.Finalize;
 begin
   KeyInventory.Finalize_;
-  FreeAndNil( KeyInventory );
+  FreeAndNil( KeyInventory )
 end;
 
 procedure TKeyInventory.Finalize_;
@@ -3115,7 +3101,7 @@ var
   i : Integer;
 begin
   for I := Pred(Count) downto 0 do Objects[i].Free;
-  Clear;
+  Clear
 end;
 
 function TKeyInventory.GetCatalogTxt: string;
@@ -3175,7 +3161,7 @@ begin
     if index > -1 then Result := TKeyItemInventory(Objects[index]).Text;
   except
     Result := EmptyStr
-  end;
+  end
 end;
 
 function TKeyInventory.GetXML(Bind: string): string;
@@ -3187,7 +3173,7 @@ begin
     if index > -1 then Result := TKeyItemInventory(Objects[index]).XMLSource;
   except
     Result := EmptyStr
-  end;
+  end
 end;
 
 function TKeyInventory.HasReference(const Dup: TKeyDuplicataType;
@@ -3208,15 +3194,16 @@ begin
     ItemX := Item[ASt];
     if not Assigned(ItemX) then begin
       FErrors.Text := Format('005 - %s : uninstantiated object', [ASt]);
-      raise Exception.Create(FErrors.Text);
+      raise Exception.Create(FErrors.Text)
     end;
     if (ItemX.FId1 = Target) or (ItemX.FId2 = Target) then begin
       FirstBindValue := ASt;
       Result         := True;
-      Break;
+      Break
     end
   end
 end;
+
 class procedure TKeyInventory.Initialize;
 begin
   if not Assigned(KeyInventory) then begin
@@ -3230,7 +3217,6 @@ begin
   { --- Si une erreur survient alors pas d'initialisation
         On doit impérativement refermer l'applicatif }
   Pre_Initilialization;
-
   FSource    := ReadSource;
   FSourceAlt := FSource;
   with TStringList.Create do
@@ -3366,7 +3352,7 @@ end;
 
 class procedure TKeyInventory.Refresh;
 begin
-  KeyInventory.Refresh_;
+  KeyInventory.Refresh_
 end;
 
 procedure TKeyInventory.Refresh_;
@@ -3779,7 +3765,7 @@ end;
 procedure TKeyMessageSender.StartSurveyor;
 begin
   FSurveyor := TKeySurveyor.Create(Self);
-  FSurveyor.Start; //Resume;
+  FSurveyor.Start; //Resume; depreciated
 end;
 
 function TKeyMessageSender.TimeBeforeUpKey: Cardinal;

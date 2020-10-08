@@ -163,7 +163,8 @@ type
 
     constructor Create;
     destructor Destroy; override;
-  published
+
+
     property OnGuiChange: TGuiNotify read FOnGuiChange write FOnGuiChange;
     property OnDocking: TBoolChangeNotify read FOnDocking write FOnDocking;
     property OnLanding: TBoolChangeNotify read FOnLanding write FOnLanding;
@@ -362,11 +363,11 @@ begin
     Stream.Position := 0;
     while Stream.Position < Stream.Size do begin
       Stream.ReadBuffer(S, SizeOf(S));
-      if S = '}' then S := ',';   //ici
-      Result := Result + S;
-    end;
+      if S = '}' then S := ',';
+      Result := Result + S
+    end
   finally
-    Stream.Free;
+    Stream.Free
   end;
 end;
 
