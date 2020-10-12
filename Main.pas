@@ -102,7 +102,7 @@ end;
 procedure TMainForm.ContextObserverStart;
 begin
   ContextObserver := TContextObserver.Create(AreaTobii);
-  ContextObserver.Start
+//  ContextObserver.Start
 end;
 
 procedure TMainForm.DelayedStarterTimer(Sender: TObject);
@@ -110,6 +110,8 @@ begin
   DelayedStarter.Enabled := False;
   UpdateActivatableRegions;
   AreaTobii.SetEliteStatus(EliteStatus);
+  { --- Instancie end start context observer }
+  ContextObserverStart
 end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
@@ -127,8 +129,6 @@ begin
   end;
   EyeXHost := TEyeXHost.create;
   TKeyMessageSender.Initialize;
-  { --- Instancie end start context observer }
-  ContextObserverStart
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);

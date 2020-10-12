@@ -56,7 +56,7 @@ object MainForm: TMainForm
   end
   object Panel7: TPanel
     Tag = 54
-    Left = 1320
+    Left = 1327
     Top = 7
     Width = 265
     Height = 130
