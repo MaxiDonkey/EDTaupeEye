@@ -819,7 +819,7 @@ const
   DFocusRightPanel : TArrayDuplicata = ('FocusRightPanel', 'FocusRightPanel_Buggy', '', '', '', '', '', '', '');
   DGalaxyMapOpen : TArrayDuplicata = ('GalaxyMapOpen', 'GalaxyMapOpen_Buggy', '', '', '', '', '', '', '');
   DSystemMapOpen : TArrayDuplicata = ('SystemMapOpen', 'SystemMapOpen_Buggy', '', '', '', '', '', '', '');
-  DToggleReverseThrottleInput : TArrayDuplicata = ('ToggleReverseThrottleInput', 'BuggyToggleReverseThrottleInput', '', '', '', '', '', '', '');
+  DToggleReverseThrottleInput : TArrayDuplicata = ('ToggleReverseThrottleInput', '', '', '', '', '', '', '', '');  //BuggyToggleReverseThrottleInput
   DFocusLeftPanel : TArrayDuplicata = ('FocusLeftPanel', 'FocusLeftPanel_Buggy', '', '', '', '', '', '', '');
   DFocusCommsPanel : TArrayDuplicata = ('FocusCommsPanel', 'FocusCommsPanel_Buggy', '', '', '', '', '', '', '');
   DFocusRadarPanel : TArrayDuplicata = ('FocusRadarPanel', 'FocusRadarPanel_Buggy', '', '', '', '', '', '', '');
@@ -1071,7 +1071,7 @@ type
     procedure SetSource(Value: string);
     function  AddKey(const Binds: string): Integer;
     procedure AssignToFree;
-    procedure KeyTrigger_(const BindStr: string; UpKey: Boolean); overload;
+    procedure KeyTrigger_(const BindStr: string; UpKey: Boolean; Cumul: Boolean = False); overload;
     procedure KeyTrigger_(const BindStr: string; pDelay: Integer); overload;
 
     property XML[Bind: string]: string read GetXML;
@@ -1124,7 +1124,8 @@ type
     procedure SetOnBeforeMouseDown(const Value: TNotifyEvent);
     procedure SetOnAfterMouseDown(const Value: TNotifyEvent);
     function  TimeBeforeUpKey: Cardinal;
-    procedure SendSignal(UpKey: Boolean);
+    { --- Cumul = True more combination don't keyup before signal }
+    procedure SendSignal(UpKey: Boolean; Cumul: Boolean);
     procedure DoKeyUp;
 
     property Clock: Cardinal read FClock write FClock;
@@ -1137,7 +1138,7 @@ type
     destructor Destroy; override;
     class procedure Initialize;
     class procedure Finalize;
-    class procedure Signal(const KeyValue, TimeMs: Cardinal; UpKey: Boolean = WITH_KEYUP);
+    class procedure Signal(const KeyValue, TimeMs: Cardinal; UpKey: Boolean; Cumul: Boolean = False);
     class procedure BeforeMouseDown(const Value: TNotifyEvent);
     class procedure AfterMouseDown(const Value: TNotifyEvent);
     class procedure KeyUp;
@@ -3288,7 +3289,7 @@ begin
   Result := FHashTable.IndexOf( Format('%d', [IdKey])) = -1
 end;
 
-procedure TKeyInventory.KeyTrigger_(const BindStr: string; UpKey: Boolean);
+procedure TKeyInventory.KeyTrigger_(const BindStr: string; UpKey: Boolean; Cumul: Boolean);
 var
   IdStr : Cardinal;
 begin
@@ -3296,7 +3297,7 @@ begin
   IdStr := GetIdFromCatalog(BindStr);
   { --- Selon la commande et le contexte définir le temps d'appui de la touche }
 
-  if IdStr > 0 then TKeyMessageSender.Signal(IdStr, 30, UpKey);
+  if IdStr > 0 then TKeyMessageSender.Signal(IdStr, 30, UpKey, Cumul);
 end;
 
 procedure TKeyInventory.MultiUsageAssign;
@@ -3619,7 +3620,7 @@ begin
   end;
 end; {MouseSignalToEvent}
 
-procedure TKeyMessageSender.SendSignal(UpKey: Boolean);
+procedure TKeyMessageSender.SendSignal(UpKey: Boolean; Cumul: Boolean);
 var
   MapVirtual0  : Cardinal;
   MapVirtual1  : Cardinal;
@@ -3695,8 +3696,9 @@ var
   end;
 
   procedure Initialize; begin
-    { --- Avant une nouvelle combinaison on s'assure que les touches sont relâchées }
-    DoKeyUp;
+    { --- Avant une nouvelle combinaison on s'assure que les touches sont relâchées
+          s'il n'y a pas de cumul de combinaisons }
+    if not Cumul then DoKeyUp;
     { --- Initialisation des virtualkey map }
     KeyCar := Chr(FKey mod 256);
     if not (FKey in [1,2,4,5,6]) then begin
@@ -3753,12 +3755,12 @@ begin
 end;
 
 class procedure TKeyMessageSender.Signal(const KeyValue, TimeMs: Cardinal;
-  UpKey: Boolean);
+  UpKey: Boolean; Cumul: Boolean);
 begin
   if Assigned(KeyMessageSender) then with KeyMessageSender do begin
-    SetIdKey   ( KeyValue );
-    SetTimems  ( TimeMs   );
-    SendSignal ( UpKey    );
+    SetIdKey   ( KeyValue     );
+    SetTimems  ( TimeMs       );
+    SendSignal ( UpKey, Cumul );
   end
 end;
 

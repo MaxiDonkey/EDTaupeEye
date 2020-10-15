@@ -8,22 +8,22 @@
     <Transaction>2020/09/13 20:55:30.000.212,=D:\EyeX\Activatable buttons\ModelSupport_ActivatableButtons\default.txaPackage</Transaction>
     <Transaction>2020/09/13 20:55:34.000.508,=D:\EyeX\Activatable buttons\ModelSupport_ActivatableButtons\default.txvpck</Transaction>
     <Transaction>2020/09/13 20:55:35.000.949,=D:\EyeX\Activatable buttons\ModelSupport_ActivatableButtons\ActivatableButtons\default.txvpck</Transaction>
-    <Transaction>2020/09/20 08:16:11.000.076,d:\2020-developpement\taupeeye\modelsupport_activatablebuttons\default.txvpck=</Transaction>
-    <Transaction>2020/09/20 08:16:11.000.088,d:\2020-developpement\taupeeye\modelsupport_activatablebuttons\activatablebuttons\default.txvpck=</Transaction>
     <Transaction>2020/09/20 08:16:11.000.647,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\TaupeEye\default.txvpck</Transaction>
-    <Transaction>2020/09/20 08:16:11.000.071,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\default.txaPackage</Transaction>
-    <Transaction>2020/09/20 08:16:11.000.717,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\uAreaTobii\default.txvpck</Transaction>
+    <Transaction>2020/09/20 08:16:11.000.088,d:\2020-developpement\taupeeye\modelsupport_activatablebuttons\activatablebuttons\default.txvpck=</Transaction>
+    <Transaction>2020/09/20 08:16:11.000.076,d:\2020-developpement\taupeeye\modelsupport_activatablebuttons\default.txvpck=</Transaction>
     <Transaction>2020/09/20 08:16:11.000.018,D:\2020-developpement\TaupeEye\ActivatableButtons.dproj=D:\2020-developpement\TaupeEye\TaupeEye.dproj</Transaction>
+    <Transaction>2020/09/20 08:16:11.000.717,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\uAreaTobii\default.txvpck</Transaction>
+    <Transaction>2020/09/20 08:16:11.000.071,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\default.txaPackage</Transaction>
+    <Transaction>2020/09/20 08:16:11.000.087,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\default.txvpck</Transaction>
     <Transaction>2020/09/20 08:16:11.000.059,d:\2020-developpement\taupeeye\modelsupport_activatablebuttons\default.txapackage=</Transaction>
     <Transaction>2020/09/20 08:16:11.000.280,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\uEyeXThread\default.txvpck</Transaction>
-    <Transaction>2020/09/20 08:16:11.000.087,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\default.txvpck</Transaction>
     <Transaction>2020/09/20 08:16:11.000.107,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\ActivatableButtons\default.txvpck</Transaction>
-    <Transaction>2020/09/20 08:16:12.000.823,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\ActivatableButtonsMain\default.txvpck</Transaction>
     <Transaction>2020/09/20 08:16:12.000.928,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\EyeXHost\default.txvpck</Transaction>
+    <Transaction>2020/09/20 08:16:12.000.823,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\ActivatableButtonsMain\default.txvpck</Transaction>
     <Transaction>2020/09/20 08:16:13.000.043,=D:\2020-developpement\TaupeEye\ModelSupport_TaupeEye\TaupeEye\default.txaPackage</Transaction>
     <Transaction>2020/09/20 08:19:13.000.270,=D:\2020-developpement\TaupeEye\Unit1.pas</Transaction>
-    <Transaction>2020/09/20 08:20:04.000.890,D:\2020-developpement\TaupeEye\ActivatableButtonsMain.dfm=D:\2020-developpement\TaupeEye\Main.dfm</Transaction>
     <Transaction>2020/09/20 08:20:04.000.890,D:\2020-developpement\TaupeEye\ActivatableButtonsMain.pas=D:\2020-developpement\TaupeEye\Main.pas</Transaction>
+    <Transaction>2020/09/20 08:20:04.000.890,D:\2020-developpement\TaupeEye\ActivatableButtonsMain.dfm=D:\2020-developpement\TaupeEye\Main.dfm</Transaction>
     <Transaction>2020/09/20 10:56:15.000.654,=D:\2020-developpement\TaupeEye\Unit1.pas</Transaction>
     <Transaction>2020/09/20 10:57:20.000.926,D:\2020-developpement\TaupeEye\uJSonDico.pas=D:\2020-developpement\TaupeEye\Unit1.pas</Transaction>
     <Transaction>2020/09/20 17:04:20.000.090,D:\2020-developpement\TaupeEye\uJSonDico.pas=</Transaction>
@@ -32,5 +32,8 @@
     <Transaction>2020/09/20 17:08:24.000.365,D:\2020-developpement\TaupeEye\uXMLDico.dfm=D:\2020-developpement\TaupeEye\Unit1.dfm</Transaction>
     <Transaction>2020/09/26 03:20:39.000.979,=D:\2020-developpement\TaupeEye\TaupeEye.ico</Transaction>
     <Transaction>2020/09/26 04:18:23.000.367,=D:\2020-developpement\TaupeEye\TaupeEye_Icon.ico</Transaction>
+    <Transaction>2020/10/14 21:32:40.000.689,=D:\2020-developpement\TaupeEye\uEliteManager.pas</Transaction>
+    <Transaction>2020/10/14 21:33:00.000.157,=D:\2020-developpement\TaupeEye\EliteBindingsTools.pas</Transaction>
+    <Transaction>2020/10/14 21:33:15.000.217,=D:\2020-developpement\TaupeEye\uStatusReader.pas</Transaction>
   </Transactions>
 </BorlandProject>

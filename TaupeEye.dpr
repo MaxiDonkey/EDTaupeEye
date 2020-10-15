@@ -13,7 +13,10 @@ uses
   uAreaTobii in 'uAreaTobii.pas',
   uXMLDico in 'uXMLDico.pas' {XmlDico},
   Vcl.Themes,
-  Vcl.Styles;
+  Vcl.Styles,
+  uEliteManager in 'uEliteManager.pas',
+  EliteBindingsTools in 'EliteBindingsTools.pas',
+  uStatusReader in 'uStatusReader.pas';
 
 {$R *.res}
 

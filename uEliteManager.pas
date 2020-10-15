@@ -93,6 +93,15 @@ type
     procedure Pere; overload;
     procedure Fils(index: Byte; tms: Integer = 0); overload;
     procedure Fils; overload;
+
+    procedure NordOuest(index: Byte; tms: Integer = 0); overload;
+    procedure NordOuest; overload;
+    procedure NordEst(index: Byte; tms: Integer = 0); overload;
+    procedure NordEst; overload;
+    procedure SudOuest(index: Byte; tms: Integer = 0); overload;
+    procedure SudOuest; overload;
+    procedure SudEst(index: Byte; tms: Integer = 0); overload;
+    procedure SudEst; overload;
     {CMD : Vol poussée}
     procedure PousseGauche(index: Byte; tms: Integer = 0);
     procedure PousseDroite(index: Byte; tms: Integer = 0);
@@ -182,9 +191,12 @@ type
     procedure PriorPage;
     {CMD : Conduite}
     procedure DriveAssist;
-    procedure TurnLeft(tms: Integer = 0);
-    procedure TurnRight(tms: Integer = 0);
-    procedure VerticalThruster(tms: Integer = 0);
+    procedure TurnLeft(tms: Integer); overload;
+    procedure TurnLeft; overload;
+    procedure TurnRight(tms: Integer); overload;
+    procedure TurnRight; overload;
+    procedure VerticalThruster(tms: Integer = 0); overload;
+    procedure VerticalThruster; overload;
     procedure VRSPrimaryFire(tms: Integer = 0);
     procedure VRSSecondaryFire(tms: Integer = 0);
     procedure VRSAutoBreak;
@@ -287,18 +299,25 @@ type
     {CMD : Free cameras}
     procedure FreeCamera_Close;
     {CMD : Atterrissage manuel}
-    procedure LandingYawLeft(tms: Integer = 0);
-    procedure LandingYawRight(tms: Integer = 0);
-    procedure LandingPitchUp(tms: Integer = 0);
-    procedure LandingPitchDown(tms: Integer = 0);
-    procedure LandingRollLeft(tms: Integer = 0);
-    procedure LandingRollRight(tms: Integer = 0);
-    procedure LandingLeftThrust(tms: Integer = 0);
-    procedure LandingRightThrust(tms: Integer = 0);
-    procedure LandingUpThrust(tms: Integer = 0);
-    procedure LandingDownThrust(tms: Integer = 0);
-    procedure LandingForwardThrust(tms: Integer = 0);
-    procedure LandingBackwardThrust(tms: Integer = 0);
+    procedure LandingYawLeft(tms: Integer);
+    procedure LandingYawRight(tms: Integer);
+    procedure LandingPitchUp(tms: Integer);
+    procedure LandingPitchDown(tms: Integer);
+    procedure LandingRollLeft(tms: Integer);
+    procedure LandingRollRight(tms: Integer);
+
+    procedure LandingLeftThrust(tms: Integer); overload;
+    procedure LandingLeftThrust; overload;
+    procedure LandingRightThrust(tms: Integer); overload;
+    procedure LandingRightThrust; overload;
+    procedure LandingUpThrust(tms: Integer); overload;
+    procedure LandingUpThrust; overload;
+    procedure LandingDownThrust(tms: Integer); overload;
+    procedure LandingDownThrust; overload;
+    procedure LandingForwardThrust(tms: Integer); overload;
+    procedure LandingForwardThrust; overload;
+    procedure LandingBackwardThrust(tms: Integer); overload;
+    procedure LandingBackwardThrust; overload;
     {CMD : Equipage multiple}
     procedure Crew_SwitchMode;
     procedure Crew_PrimaryFire(tms: Integer = 0);
@@ -591,18 +610,18 @@ begin
     170   : DSDZoomOut(150);
     171   : DSDZoomIn(150);
     {*** VOL ATTERRISSAGE MANUEL 226-305}
-    172   : LandingYawLeft;
-    173   : LandingYawRight;
-    174   : LandingPitchUp;
-    175   : LandingPitchDown;
-    176   : LandingRollLeft;
-    177   : LandingRollRight;
-    178   : LandingLeftThrust;
-    179   : LandingRightThrust;
-    180   : LandingUpThrust;
-    181   : LandingDownThrust;
-    182   : LandingForwardThrust;
-    183   : LandingBackwardThrust;
+    172   : LandingYawLeft(0);
+    173   : LandingYawRight(0);
+    174   : LandingPitchUp(0);
+    175   : LandingPitchDown(0);
+    176   : LandingRollLeft(0);
+    177   : LandingRollRight(0);
+    178   : LandingLeftThrust(0);
+    179   : LandingRightThrust(0);
+    180   : LandingUpThrust(0);
+    181   : LandingDownThrust(0);
+    182   : LandingForwardThrust(0);
+    183   : LandingBackwardThrust(0);
     {*** EQUIPAGE MULTIPLE 1186-1257}
     184   : Crew_SwitchMode;
     185   : Crew_PrimaryFire(1500);
@@ -962,6 +981,34 @@ end;
 procedure TCustomEliteManager.Sud;
 begin
   FKeyInventory.KeyTrigger_('PitchDownButton' , WITHOUT_KEYUP)
+end;
+
+procedure TCustomEliteManager.SudEst(index: Byte; tms: Integer);
+begin
+  Sud(index, tms);
+  Est(index, tms)
+end;
+
+procedure TCustomEliteManager.SudEst;
+begin
+  { --- KeyUp before signal }
+  FKeyInventory.KeyTrigger_('PitchDownButton' , WITHOUT_KEYUP);
+  { --- No KeyUp before signal for combination cumulative }
+  FKeyInventory.KeyTrigger_('YawRightButton' , WITHOUT_KEYUP, True)
+end;
+
+procedure TCustomEliteManager.SudOuest(index: Byte; tms: Integer);
+begin
+  Sud(index, tms);
+  Ouest(index, tms)
+end;
+
+procedure TCustomEliteManager.SudOuest;
+begin
+  { --- KeyUp before signal }
+  FKeyInventory.KeyTrigger_('PitchDownButton' , WITHOUT_KEYUP);
+  { --- No KeyUp before signal for combination cumulative }
+  FKeyInventory.KeyTrigger_('YawLeftButton' , WITHOUT_KEYUP, True)
 end;
 
 procedure TCustomEliteManager.SuperNavigation;
@@ -1503,6 +1550,11 @@ begin
   FKeyInventory.KeyTrigger_( 'LandingGearToggle', WITH_KEYUP)
 end;
 
+procedure TCustomEliteManager.LandingLeftThrust;
+begin
+  FKeyInventory.KeyTrigger_( 'LeftThrustButton_Landing', WITHOUT_KEYUP)
+end;
+
 procedure TCustomEliteManager.CargoEject;
 begin
   FKeyInventory.KeyTrigger_( 'EjectAllCargo', WITH_KEYUP)
@@ -1567,6 +1619,34 @@ end;
 procedure TCustomEliteManager.Nord;
 begin
   FKeyInventory.KeyTrigger_('PitchUpButton' , WITHOUT_KEYUP)
+end;
+
+procedure TCustomEliteManager.NordEst(index: Byte; tms: Integer);
+begin
+  Nord(index, tms);
+  Est(index, tms)
+end;
+
+procedure TCustomEliteManager.NordEst;
+begin
+  { --- KeyUp before signal }
+  FKeyInventory.KeyTrigger_('PitchUpButton' , WITHOUT_KEYUP);
+  { --- No KeyUp before signal for combination cumulative }
+  FKeyInventory.KeyTrigger_('YawRightButton' , WITHOUT_KEYUP, True)
+end;
+
+procedure TCustomEliteManager.NordOuest(index: Byte; tms: Integer);
+begin
+  Nord(index, tms);
+  Ouest(index, tms);
+end;
+
+procedure TCustomEliteManager.NordOuest;
+begin
+  { --- KeyUp before signal }
+  FKeyInventory.KeyTrigger_('PitchUpButton' , WITHOUT_KEYUP);
+  { --- No KeyUp before signal for combination cumulative }
+  FKeyInventory.KeyTrigger_('YawLeftButton' , WITHOUT_KEYUP, True)
 end;
 
 procedure TCustomEliteManager.LeftPanel;
@@ -1689,6 +1769,16 @@ begin
   end
 end;
 
+procedure TCustomEliteManager.TurnLeft;
+begin
+  FKeyInventory.KeyTrigger_( 'SteerLeftButton', WITHOUT_KEYUP)
+end;
+
+procedure TCustomEliteManager.TurnRight;
+begin
+  FKeyInventory.KeyTrigger_( 'SteerRightButton', WITHOUT_KEYUP)
+end;
+
 procedure TCustomEliteManager.TurnRight(tms: Integer);
 begin
   case EliteStatus.InSrv of
@@ -1719,6 +1809,11 @@ procedure TCustomEliteManager.VRSSecondaryFire(tms: Integer);
 begin
   if tms < 1 then FKeyInventory.KeyTrigger_( 'BuggySecondaryFireButton', WITH_KEYUP)
     else FKeyInventory.KeyTrigger_( 'BuggySecondaryFireButton', tms)
+end;
+
+procedure TCustomEliteManager.VerticalThruster;
+begin
+  FKeyInventory.KeyTrigger_( 'VerticalThrustersButton', WITHOUT_KEYUP)
 end;
 
 procedure TCustomEliteManager.VRSAutoBreak;
@@ -1801,9 +1896,10 @@ end;
 
 procedure TCustomEliteManager.PropulsionReverse;
 begin
-  case EliteStatus.InSrv of
-    True : FKeyInventory.KeyTrigger_( 'BuggyToggleReverseThrottleInput', WITH_KEYUP)
-  end
+//  case EliteStatus.InSrv of
+//    True : FKeyInventory.KeyTrigger_( 'BuggyToggleReverseThrottleInput', WITH_KEYUP)
+//  end
+  FKeyInventory.KeyTrigger_( 'BuggyToggleReverseThrottleInput', WITH_KEYUP)
 end;
 
 procedure TCustomEliteManager.PropulsionAcceleration(tms: Integer);
@@ -2343,6 +2439,11 @@ begin
     else FKeyInventory.KeyTrigger_( 'PitchDownButton_Landing', tms)
 end;
 
+procedure TCustomEliteManager.LandingRightThrust;
+begin
+  FKeyInventory.KeyTrigger_( 'RightThrustButton_Landing', WITHOUT_KEYUP)
+end;
+
 procedure TCustomEliteManager.LandingRollLeft(tms: Integer);
 begin
   if tms < 1 then FKeyInventory.KeyTrigger_( 'RollLeftButton_Landing', WITH_KEYUP)
@@ -2353,6 +2454,11 @@ procedure TCustomEliteManager.LandingRollRight(tms: Integer);
 begin
   if tms < 1 then FKeyInventory.KeyTrigger_( 'RollRightButton_Landing', WITH_KEYUP)
     else FKeyInventory.KeyTrigger_( 'RollRightButton_Landing', tms)
+end;
+
+procedure TCustomEliteManager.LandingUpThrust;
+begin
+  FKeyInventory.KeyTrigger_( 'UpThrustButton_Landing', WITHOUT_KEYUP)
 end;
 
 procedure TCustomEliteManager.LandingLeftThrust(tms: Integer);
@@ -2389,6 +2495,21 @@ procedure TCustomEliteManager.LandingBackwardThrust(tms: Integer);
 begin
   if tms < 1 then FKeyInventory.KeyTrigger_( 'BackwardThrustButton_Landing', WITH_KEYUP)
     else FKeyInventory.KeyTrigger_( 'BackwardThrustButton_Landing', tms)
+end;
+
+procedure TCustomEliteManager.LandingBackwardThrust;
+begin
+  FKeyInventory.KeyTrigger_( 'BackwardThrustButton_Landing', WITHOUT_KEYUP)
+end;
+
+procedure TCustomEliteManager.LandingDownThrust;
+begin
+  FKeyInventory.KeyTrigger_( 'DownThrustButton_Landing', WITHOUT_KEYUP)
+end;
+
+procedure TCustomEliteManager.LandingForwardThrust;
+begin
+  FKeyInventory.KeyTrigger_( 'ForwardThrustButton_Landing', WITHOUT_KEYUP)
 end;
 
 procedure TCustomEliteManager.Crew_CokpitNext;

@@ -118,8 +118,8 @@
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <VerInfo_MajorVer>0</VerInfo_MajorVer>
         <VerInfo_MinorVer>9</VerInfo_MinorVer>
-        <VerInfo_Build>97</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=Galactic 911;FileVersion=0.9.0.97;InternalName=TaupeEye;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=0.9.0.0;Comments=Elite Dangerous Tool;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Build>98</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=Galactic 911;FileVersion=0.9.0.98;InternalName=TaupeEye;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=0.9.0.0;Comments=Elite Dangerous Tool;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -153,6 +153,9 @@
             <Form>XmlDico</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="uEliteManager.pas"/>
+        <DCCReference Include="EliteBindingsTools.pas"/>
+        <DCCReference Include="uStatusReader.pas"/>
         <None Include="ModelSupport_TaupeEye\default.txaPackage"/>
         <None Include="ModelSupport_TaupeEye\default.txvpck"/>
         <None Include="ModelSupport_TaupeEye\ActivatableButtons\default.txvpck"/>

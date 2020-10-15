@@ -426,7 +426,7 @@ end;
 
 function TEliteStatus.HardpointDeployed: Boolean;
 begin
-  Result := IsByteOpen( Integer(hardpointdeployed) )
+  Result := IsByteOpen( Integer(est_hardpointdeployed) )
 end;
 
 function TEliteStatus.HasLatLong: Boolean;
@@ -988,7 +988,7 @@ begin
   if FSource <> EmptyStr then begin
     ASt := GetAfterStr(FSource, 'Flags":');
     ASt := GetBeforStr(ASt, ',');
-    try Result := StrToInt(ASt) except Result := 0 end
+    try Result := StrToInt64(ASt) except Result := 0 end
   end
 end;
 

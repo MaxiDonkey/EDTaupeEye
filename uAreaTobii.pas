@@ -56,7 +56,7 @@ type
 
   private
     FBorder: Boolean;
-    { --- Ascesseurs / mutateurs }
+    { --- Assessors / mutators }
     function  GetPanel(index: Integer): TPanel;
     function  GetCaption(index: Integer): string;
     procedure SetCaption(index: Integer; const Value: string);
@@ -65,16 +65,16 @@ type
     procedure SetBorder(const Value: Boolean);
 
   public
-    { --- Création des zones }
+    { --- Creation of zones }
     procedure Add(const Panel: TPanel; const ATag: Integer; const AMode: TSelectMode; const ANull: Boolean = False);
 
-    { --- Paramétrage des zones }
+    { --- Zone settings }
     procedure CaptionUpdate(const Raw: Integer; const Values: array of string);
     procedure VisibleUpdate(const Raw: Integer; const Values: array of Boolean; Update: Boolean = False);
     procedure SelModeUpdate(const Raw: Integer; const Values: array of TSelectMode);
     procedure TagsUpdate(const Raw: Integer; const Values: array of Integer);
     procedure NullUpdate(const Raw: Integer; const Values: array of Boolean);
-    { --- Paramétrage d'une zone dans la matrice écran }
+    { --- Setting of an area in the screen matrix }
     procedure BoxUpdate(const Raw, Col, ATag: Integer; ACaption: string; AVisible: Boolean; AMode: TSelectMode; ANull: Boolean);
 
     procedure SetEliteStatus(const Value: TEliteStatus);
@@ -87,19 +87,19 @@ type
     { --- Actions on external components or application }
     procedure SendSignal(const k1: string; const k2 : string = ''; const k3: string = '');
 
-    { --- Accès en lecture seule à l'instance du TAreaPanels }
+    { --- Read-only access to the TAreaPanels instance }
     property Areas: TAreaPanels read GetAreas;
-    { --- Accès en lecture seule aux contextes }
+    { --- Read-only access to contexts }
     property Context: TKeyboardContext read FContext;
-    { --- Accès en lecture seule aux contextes Elite}
+    { --- Read-only access to Elite contexts }
     property Elite: TEliteContext read FElite;
 
     property Panel[index: Integer]: TPanel read GetPanel;
-    { --- Lit ou modifie le caption du panel à l'indice index }
+    { --- Read or modify the panel caption at the index index }
     property Caption[index: Integer]: string read GetCaption write SetCaption;
-    { --- True si la zone index est sélectionnée }
+    { --- True if the index zone is selected }
     property Selected[index: Integer]: Boolean read GetSelected;
-    { --- Bordure pour toutes les zones }
+    { --- Border for all areas }
     property Border: Boolean read FBorder write SetBorder;
     { --- External update write redraw areas to tobii }
     property OnUpdateAreas: TNotifyEvent read FAreasUpdate write FAreasUpdate;
@@ -130,13 +130,16 @@ type
     procedure Context_EliteMenu;
     procedure Context_StepSelect;
     procedure Context_EliteDrive;
-    procedure Context_Func;
-    procedure Context_Func0;
-    procedure Context_Func1;
-    procedure Context_Func2;
-    procedure Context_Func3;
-    procedure Context_Func4;
-    procedure Context_Func5;
+    procedure Context_EliteDriveCombat;
+    procedure Context_EliteDriveLanding;
+    procedure Context_EliteDriveVRS;
+    procedure Context_Func;                        // Function Header
+    procedure Context_Func0;                       //0: Panels area
+    procedure Context_Func1;                       //1: DIV area
+    procedure Context_Func2;                       //2: Weapons area
+    procedure Context_Func3;                       //3: Fighter area
+    procedure Context_Func4;                       //4: Camera area
+
     {TODO}
     procedure Context_GalaxyMap;
     procedure Context_System_Map;
@@ -202,6 +205,16 @@ type
     procedure SetUnicStep(const Value: Boolean);
     function  GetCurrentHud: TKindHud;
     procedure SetCurrentHud(const Value: TKindHud);
+    function  GetIndexLandingDrive: Integer;
+    procedure SetIndexLandingDrive(const Value: Integer);
+    function  GetSubLandingDriveIndex: Integer;
+    procedure SetSubLandingDriveIndex(const Value: Integer);
+    function  GetIndexOfPitchLanding: Integer;
+    procedure SetIndexOfPitchLanding(const Value: Integer);
+    function  GetIndexVRSMode: Integer;
+    procedure SetIndexVRSMode(const Value: Integer);
+    function  GetSubVRSIndex: Integer;
+    procedure SetSubVRSIndex(const Value: Integer);
   public
     { --- Lauch and retieve Elite state }
     procedure TryLaunchOnMenuDisplay;
@@ -235,16 +248,27 @@ type
     procedure DoKeyBoardShow;
     procedure DoNavBack;
 
-    { --- Elite main function notigy actions }
+    { --- Elite main function notify actions }
     procedure PauseBack;
     procedure PauseFunctionBack;
     procedure PauseEnable;
     procedure DoTarget12h;
+    procedure DoOrderPanel;
+    procedure DoStartFighter;
+
+    { --- VRS drive notify actions }
     procedure DoAutoBreak;
     procedure DoVRSTurret;
     procedure DoShipDismissRecall;
-    procedure DoOrderPanel;
-    procedure DoStartFighter;
+    procedure DoVRSSlide;                         //VRS Slide
+    procedure DoVRSStep;                          //VRS Step
+    procedure DoVRSUpView;                        //VRS Turret up view
+    procedure DoVRSDownView;                      //VRS Turret down view
+    procedure DoVRSTurnLeft;                      //VRS Turn left
+    procedure DoVRSTurnRight;                     //VRS Turn right
+    procedure DoVRSVerticalThrust;                //VRS Vertical thrust
+    procedure DoVRSReversePropulsion;             //VRS Reverse propulsion
+    procedure DoDriveAssist;
 
     { --- Navigation notify actions }
     procedure NavLauncher(const MethA: TContextNotify; const MethB: TIntegerNotify;
@@ -263,10 +287,16 @@ type
     procedure DoFSD;
     procedure DoPrevShip;
     procedure DoNextShip;
+    procedure DoNavNordOuest;
+    procedure DoNavNordEst;
+    procedure DoNavSudOuest;
+    procedure DoNavSudEst;
 
     { --- Galaxy map notify actions }
     procedure NavLauncher(const MethA: TContextNotify; const MethB: TIntANotify;
       Index: Integer); overload;
+    procedure NavLauncherThrust(const MethA: TContextNotify; const MethB: TIntANotify;
+      Index: Integer);
     procedure DoGMSlide;
     procedure DoGMSteps;
     procedure DoGMGoHome;
@@ -326,32 +356,61 @@ type
     procedure DoDSDViewChange;
     procedure DoDSDPitchDown;
     procedure DoDSDFire;
+
+    { --- Drive landing or docking }
+    procedure DoDriveLandingSlide;
+    procedure DoDriveLandingStep;
+    procedure DoDriveLandingPitch;
+
+    procedure DoDriveLandingPitchUp;
+    procedure DoLandingPitchDown;
+    procedure DoDriveLandingRollLeft;
+    procedure DoDriveLandingRollRight;
+    procedure DoDriveLandingYawLeft;
+    procedure DoDriveLandingYawRight;
+
+    procedure DoDriveLandingUpThrust(NotLanding: Boolean = False);
+    procedure DoDriveLandingDownThrust(NotLanding: Boolean = False);
+    procedure DoDriveLandingLeftThrust(NotLanding: Boolean = False);
+    procedure DoDriveLandingRightThrust(NotLanding: Boolean = False);
+    procedure DoDriveLandingForwardThrust(NotLanding: Boolean = False);
+    procedure DoDriveLandingBackThrust(NotLanding: Boolean = False);
+
     { --- Check in vehicle }
     function IsFlying:Boolean;
-    { --- Check Landed or Docked}
+    { --- Check Docked }
     function IsDocked:Boolean;
+    { --- Check Landed }
+    function IsLanded:Boolean;
     { --- Check if map opened }
     function IsMapOpened:Boolean;
 
     property Step: Integer read GetStep write SetStep;
     property UnicStep: Boolean read GetUnicStep write SetUnicStep;
     property IndexFunc: Integer read GetIndexFunc write SetIndexFunc;
-    { --- Indexes for Ship drive }
+    { --- Ship drive indexes}
     property IndexMode: Integer read GetIndexMode write SetIndexMode;
     property SubIndex: Integer read GetSubIndex write SetSubIndex;
-    { --- Indexes for Galaxy map }
+    { --- Galaxy map indexes}
     property IndexGMMode: Integer read GetIndexGMMode write SetIndexGMMode;
     property SubGMIndex: Integer read GetSubGMIndex write SetSubGMIndex;
     property GMAllSlide: Boolean read GetGMAllSlide write SetGMAllSlide;
-    { --- Indexes for System map }
+    { --- System map indexes}
     property IndexSMMode: Integer read GetIndexSMMode write SetIndexSMMode;
     property SubSMIndex: Integer read GetSubSMIndex write SetSubSMIndex;
-    { --- Indexes for exploration FSS }
+    { --- Exploration FSS indexes }
     property IndexACSMode: Integer read GetIndexACSMode write SetIndexACSMode;
     property SubACSIndex: Integer read GetSubACSIndex write SetSubACSIndex;
-    { --- Indexes for SAA }
+    { --- SAA indexes}
     property IndexDSDMode: Integer read GetIndexDSDMode write SetIndexDSDMode;
     property SubDSDIndex: Integer read GetSubDSDIndex write SetSubDSDIndex;
+    { --- VRS indexes}
+    property IndexVRSMode: Integer read GetIndexVRSMode write SetIndexVRSMode;
+    property SubVRSIndex: Integer read GetSubVRSIndex write SetSubVRSIndex;
+    { --- Landing or dicking drive indexes }
+    property IndexLandingDrive: Integer read GetIndexLandingDrive write SetIndexLandingDrive;
+    property SubLandingDriveIndex: Integer read GetSubLandingDriveIndex write SetSubLandingDriveIndex;
+    property IndexOfPitchLanding: Integer read GetIndexOfPitchLanding write SetIndexOfPitchLanding;
     { --- Time slide off }
     property SlideOffms: Integer read GetSlideOffms write SetSlideOffms;
     { --- Params }
@@ -430,7 +489,7 @@ type
     procedure DoMenuEchap;
     procedure DoAlt;
     procedure DoTab;
-    procedure DataDico; //Temporaire
+    procedure DataDico; //Temporary
     procedure AltInsert(const Alt: Integer);
     procedure DoOnShift;
     procedure DoWithCar(const ATag: Integer);
@@ -443,7 +502,7 @@ type
     procedure DoKeyBoardBack;
     procedure DoMainKeyBoardLaunch;
     procedure DoParametersLaunch;
-    { --- State indicator managment }
+    { --- State indicator management }
     procedure DisplaySpecial(AIndex: Integer);
     procedure DisplayNumpad;
     procedure DisplayAlpha;
@@ -476,7 +535,7 @@ type
 
     procedure MainMenu_display;
   private
-    { --- Ascesseurs / Mutateurs }
+    { --- Assessors / Mutators }
     function  GetCapsLock: Boolean;
     procedure SetCapsLock(const Value: Boolean);
     function  GetLeftKeyboard: Boolean;
@@ -512,8 +571,11 @@ type
 
   TContextObserver = class(TTHread)
   private
-    ThAreaTobii : TAreaTobii;
-    Old_Docked  : Boolean;
+    ThAreaTobii     : TAreaTobii;
+    Old_Docked      : Boolean;
+    Old_HardPoints  : Boolean;
+    Old_LandingGear : Boolean;
+    Old_InSRV       : Boolean;
     procedure ThDelay(ms: Cardinal);
     procedure Process;
   public
@@ -850,7 +912,7 @@ begin
     Add(Panel38, 38, sm_none);  Add(Panel39, 39, sm_none);
     Add(Panel40, 40, sm_none);  Add(Panel41, 41, sm_none);
     Add(Panel42, 42, sm_none);  Add(Panel43, 0,  sm_none)
-    //Panel43 ne sert que de biais
+    //Panel43 only serves as a bias
   end;
 end;
 
@@ -1578,7 +1640,7 @@ begin
   SendTextTo(Car);
   KeySound;
   AreaPanels.Unselect;
-  RepaintKeyboardAlpha
+//  RepaintKeyboardAlpha  { --- WARNING only display one character }
 end; {DoWithCar}
 
 procedure TKeyboardContext.FunctionSound;
@@ -1630,7 +1692,7 @@ begin
      91105 : DoNext;
      91008 : DoAlphaRight;
      91009 : DoAlphaLeft;
-     { --- Add char to external component }
+     { --- Add char to the external component }
      91010..91092 : DoWithCar( ATag );
      91100 : DoOnShift;
      91101 : DisplayNumpad;
@@ -1675,7 +1737,7 @@ begin
      91143 : DoMenuEchap;
      91144 : DoAlt;
      91145 : DoTab;
-     { --- Insert alternative to external component }
+     { --- Insert alternative to the external component }
      91150..91156 : AltInsert(Atag);
   end
 end;
@@ -1783,7 +1845,7 @@ end;
 
 procedure TKeyboardContext.SendSignal(const k1, k2, k3: string);
 begin
-  TKeyMessageSender.Signal( EncodeKey( k1, k2, k3 ), 10 )
+  TKeyMessageSender.Signal( EncodeKey( k1, k2, k3 ), 10, WITH_KEYUP )
 end;
 
 procedure TKeyboardContext.SendTextTo(const ASt: string);
@@ -2038,12 +2100,13 @@ begin
       BoxUpdate(1, 3, 91200, '',              True, sm_blinkback, True);
       BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True);
       BoxUpdate(1, 5, 91200, '',              True, sm_blinkback, True);
+      BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True);
     end else begin
       BoxUpdate(1, 3, 91293, 'SUPERCRUISE',   True, sm_blinkback, False);
       BoxUpdate(1, 4, 91239, 'FUNC',          True, sm_blinkback, False);
-      BoxUpdate(1, 5, 91294, 'FSD',           True, sm_blinkback, False)
+      BoxUpdate(1, 5, 91294, 'FSD',           True, sm_blinkback, False);
+      BoxUpdate(1, 6, 91269, '12H TARGET',    True, sm_blinkback, False)
     end;
-    BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 7, 91550, 'BACK',          True, sm_blinkback, False);
 
     BoxUpdate(2, 1, 91282, 'SPEED LESS',    True, sm_blinkback, False);
@@ -2076,7 +2139,8 @@ begin
     BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91289, 'INV SPEED',     True, sm_blinkback, False);
+    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
+//    BoxUpdate(5, 7, 91289, 'INV SPEED',     True, sm_blinkback, False);
 
     BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
     BoxUpdate(6, 2, 91290, 'BOOST',         True, sm_blinkback, False);
@@ -2085,6 +2149,126 @@ begin
     BoxUpdate(6, 5, 91236, 'SHOOT 1',       True, sm_blinkback, False);
     BoxUpdate(6, 6, 91291, 'FLIGHT ASSIST', True, sm_blinkback, False);
     BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False)
+  end
+end;
+
+procedure TEliteContext.Context_EliteDriveCombat;
+begin
+  with FOwner do begin
+    ResetAreas;
+    BoxUpdate(1, 1, 91234, 'ROLL LEFT',     True, sm_directnotnull, False);
+    BoxUpdate(1, 2, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(1, 3, 91290, 'BOOST',         True, sm_blinkback, False);
+    BoxUpdate(1, 4, 91239, 'FUNC',          True, sm_blinkback, False);
+    BoxUpdate(1, 5, 91291, 'FLIGHT ASSIST', True, sm_blinkback, False);
+    BoxUpdate(1, 6, 91269, '12H TARGET',    True, sm_blinkback, False);
+    BoxUpdate(1, 7, 91235, 'ROLL RIGHT',    True, sm_directnotnull, False);
+
+    BoxUpdate(2, 1, 91268, 'HIGEST THREAT', True, sm_blinkback, False);
+    BoxUpdate(2, 2, 91511, 'NORD WEST',     True, sm_directnotnull, False);
+    BoxUpdate(2, 3, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(2, 4, 91230, 'PITCH UP',      True, sm_directnotnull, False);
+    BoxUpdate(2, 5, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(2, 6, 91512, 'NORD EST',      True, sm_directnotnull, False);
+    BoxUpdate(2, 7, 91267, 'NEXT HOSTILE',  True, sm_blinkback, False);
+
+    BoxUpdate(3, 1, 91284, 'SPEED 25%',     True, sm_blinkback, False);
+    BoxUpdate(3, 2, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(3, 3, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(3, 4, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(3, 5, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(3, 6, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(3, 7, 91285, 'SPEED 0%',      True, sm_blinkback, False);
+
+    BoxUpdate(4, 1, 91286, 'SPEED 50%',     True, sm_blinkback, False);
+    BoxUpdate(4, 2, 91232, 'YAW LEFT',      True, sm_directnotnull, False);
+    BoxUpdate(4, 3, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(4, 4, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(4, 6, 91233, 'YAW RIGHT',     True, sm_directnotnull, False);
+    BoxUpdate(4, 5, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(4, 7, 91287, 'SPEED 100%',    True, sm_blinkback, False);
+
+    BoxUpdate(5, 1, 91288, 'SPEED 75%',     True, sm_blinkback, False);
+    BoxUpdate(5, 2, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(5, 3, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
+    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
+//    BoxUpdate(5, 7, 91289, 'INV SPEED',     True, sm_blinkback, False);
+
+    BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
+    BoxUpdate(6, 2, 91513, 'SUD WEST',      True, sm_directnotnull, False);
+    BoxUpdate(6, 3, 91237, 'SHOOT 2',       True, sm_blinkback, False);
+    BoxUpdate(6, 4, 91231, 'PITCH DOWN',    True, sm_directnotnull, False);
+    BoxUpdate(6, 5, 91236, 'SHOOT 1',       True, sm_blinkback, False);
+    BoxUpdate(6, 6, 91514, 'SUD EST',       True, sm_directnotnull, False);
+    BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False)
+  end
+end;
+
+procedure TEliteContext.Context_EliteDriveLanding;
+var
+  ASt     : string;
+  ASt1    : string;
+  BtnMode : TSelectMode;
+begin
+  AreaPanels.Unselect;
+  BtnMode := sm_blinkback;
+  if IndexLandingDrive = 0 then begin
+    BtnMode := sm_directnotnull;
+    ASt     := 'NO STEP'
+  end else ASt := Format('STEP %d', [SubLandingDriveIndex]);
+  ASt1 := Format('PITCH %d', [IndexOfPitchLanding + 1]);
+  with FOwner do begin
+    ResetAreas;
+    BoxUpdate(1, 1, 91522, 'SLIDE',           True, sm_blinkback, False);
+    BoxUpdate(1, 2, 91523, ASt,               True, sm_blinkback, False);
+    BoxUpdate(1, 3, 91524, ASt1,              True, sm_blinkback, False);
+    BoxUpdate(1, 4, 91239, 'FUNC',            True, sm_blinkback, False);
+    BoxUpdate(1, 5, 91525, 'PITCH UP',        True, sm_blinkback, False);
+    BoxUpdate(1, 6, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(1, 7, 91285, 'SPEED 0%',        True, sm_blinkback, False);
+
+    BoxUpdate(2, 1, 91526, 'ROLL LEFT',       True, sm_blinkback, False);
+    BoxUpdate(2, 2, 91527, 'BACKWARD THRUST', True, BtnMode, False);
+    BoxUpdate(2, 3, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(2, 4, 91528, 'UP THRUST',       True, BtnMode, False);
+    BoxUpdate(2, 5, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(2, 6, 91529, 'FORWARD THRUST',  True, BtnMode, False);
+    BoxUpdate(2, 7, 91530, 'ROLL RIGHT',      True, sm_blinkback, False);
+
+    BoxUpdate(3, 1, 91282, 'SPEED LESS',      True, sm_blinkback, False);
+    BoxUpdate(3, 2, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(3, 3, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(3, 4, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(3, 5, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(3, 6, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(3, 7, 91283, 'SPEED MORE',      True, sm_blinkback, False);
+
+    BoxUpdate(4, 1, 91531, 'YAW LEFT',        True, sm_blinkback, False);
+    BoxUpdate(4, 2, 91532, 'LEFT THRUST',     True, BtnMode, False);
+    BoxUpdate(4, 3, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(4, 4, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(4, 5, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(4, 6, 91533, 'RIGHT THRUST',    True, BtnMode, False);
+    BoxUpdate(4, 7, 91534, 'YAW RIGHT',       True, sm_blinkback, False);
+
+    BoxUpdate(5, 1, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(5, 2, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(5, 3, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(5, 4, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(5, 5, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(5, 6, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(5, 7, 91200, '',                True, sm_blinkback, True);
+
+    BoxUpdate(6, 1, 91570, 'SWITCH',          True, sm_blinkback, False);
+    BoxUpdate(6, 2, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(6, 3, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(6, 4, 91535, 'DOWN THRUST',     True, BtnMode, False);
+    BoxUpdate(6, 5, 91536, 'PITCH DOWN',      True, sm_blinkback, False);
+    BoxUpdate(6, 6, 91200, '',                True, sm_blinkback, True);
+    BoxUpdate(6, 7, 91599, 'PAUSE',           True, sm_blinkback, False)
   end
 end;
 
@@ -2099,7 +2283,7 @@ begin
     if MapCalled in [kmc_galaxy, kmc_system]
       then BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True)
       else BoxUpdate(1, 4, 91239, 'FUNC',          True, sm_blinkback, False);
-    { --- TODO Show Keybord with context}
+    { --- TODO Show Keybord with context }
     if (MapCalled = kmc_galaxy) or ComPanelOpened
       then BoxUpdate(1, 5, 91560, 'KEYBOARD',      True, sm_blinkback, False)
       else BoxUpdate(1, 5, 91200, '',              True, sm_blinkback, True);
@@ -2160,7 +2344,8 @@ begin
       BoxUpdate(1, 2, 91250, 'DIV',           True, sm_blinkback, False);
       BoxUpdate(1, 3, 91260, 'WEAPONS',       True, sm_blinkback, False);
       BoxUpdate(1, 4, 91300, 'FIGHTER',       True, sm_blinkback, False);
-      BoxUpdate(1, 6, 91400, 'SRV',           True, sm_blinkback, False)
+//      BoxUpdate(1, 6, 91400, 'SRV',           True, sm_blinkback, False)
+      BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True)
     end else begin
       BoxUpdate(1, 2, 91200, '',              True, sm_blinkback, True);
       BoxUpdate(1, 3, 91200, '',              True, sm_blinkback, True);
@@ -2231,42 +2416,42 @@ end;
 procedure TEliteContext.Context_Func1;
 begin
   with FOwner do begin
-    BoxUpdate(2, 2, 91251, 'LANDING GEAR',  True, sm_blinkback, False);
-    BoxUpdate(2, 3, 91252, 'CARGO SCOOP',   True, sm_blinkback, False);
-    BoxUpdate(2, 4, 91253, 'NIGHT VISION',  True, sm_blinkback, False);
-    BoxUpdate(2, 5, 91254, 'SPOTLIGHT',     True, sm_blinkback, False);
-    BoxUpdate(2, 6, 91255, 'COCKPIT MODE',  True, sm_blinkback, False);
-    BoxUpdate(2, 7, 91277, 'S.A.A',         True, sm_blinkback, False);
+    BoxUpdate(2, 2, 91251, 'LANDING GEAR',     True, sm_blinkback, False);
+    BoxUpdate(2, 3, 91252, 'CARGO SCOOP',      True, sm_blinkback, False);
+    BoxUpdate(2, 4, 91253, 'NIGHT VISION',     True, sm_blinkback, False);
+    BoxUpdate(2, 5, 91254, 'SPOTLIGHT',        True, sm_blinkback, False);
+    BoxUpdate(2, 6, 91255, 'COCKPIT MODE',     True, sm_blinkback, False);
+    BoxUpdate(2, 7, 91277, 'S.A.A',            True, sm_blinkback, False);
 
-    BoxUpdate(3, 1, 91281, 'CHARGE ECM',    True, sm_blinkback, False);
+    BoxUpdate(3, 1, 91281, 'CHARGE ECM',       True, sm_blinkback, False);
 
-    BoxUpdate(4, 1, 91279, 'SHIELD CELL',   True, sm_blinkback, False);
-    BoxUpdate(4, 4, 91256, 'PIPE ENGINES',  True, sm_blinkback, False);
-    BoxUpdate(4, 7, 91295, 'PREV SHIP',     True, sm_blinkback, False);
+    BoxUpdate(4, 1, 91279, 'SHIELD CELL',      True, sm_blinkback, False);
+    BoxUpdate(4, 4, 91538, 'UP THRUST',        True, sm_directnotnull, False);
+    BoxUpdate(4, 7, 91295, 'PREV SHIP',        True, sm_blinkback, False);
 
-    BoxUpdate(5, 1, 91280, 'HEAT SINK',     True, sm_blinkback, False);
-    BoxUpdate(5, 3, 91257, 'PIPE SYSTEMS',  True, sm_blinkback, False);
-    BoxUpdate(5, 4, 91259, 'DEFAULT',       True, sm_blinkback, False);
-    BoxUpdate(5, 5, 91258, 'PIPE WEAPONS',  True, sm_blinkback, False);
-    BoxUpdate(5, 7, 91296, 'NEXT SHIP',     True, sm_blinkback, False);
+    BoxUpdate(5, 1, 91280, 'HEAT SINK',        True, sm_blinkback, False);
+    BoxUpdate(5, 3, 91542, 'LEFT THRUST',      True, sm_directnotnull, False);
+    BoxUpdate(5, 5, 91543, 'RIGHT THRUST',     True, sm_directnotnull, False);
+    BoxUpdate(5, 7, 91296, 'NEXT SHIP',        True, sm_blinkback, False);
 
-    BoxUpdate(6, 1, 91278, 'CHAFF LAUNCHER',True, sm_blinkback, False);
-    BoxUpdate(6, 3, 91273, 'FULL SYSTEMS',  True, sm_blinkback, False);
-    BoxUpdate(6, 4, 91274, 'FULL ENGINES',  True, sm_blinkback, False);
-    BoxUpdate(6, 5, 91275, 'FULL WEAPONS',  True, sm_blinkback, False)
+    BoxUpdate(6, 1, 91278, 'CHAFF LAUNCHER',   True, sm_blinkback, False);
+    BoxUpdate(6, 3, 91537, 'BACKWARD THRUST',  True, sm_directnotnull, False);
+    BoxUpdate(6, 4, 91545, 'DOWN THRUST',      True, sm_directnotnull, False);
+    BoxUpdate(6, 5, 91539, 'FORWARD THRUST',   True, sm_directnotnull, False);
   end
 end;
 
 procedure TEliteContext.Context_Func2;
 begin
   with FOwner do begin
+    BoxUpdate(2, 1, 91276, 'NEXT ROUTE',       True, sm_blinkback, False);
     BoxUpdate(2, 2, 91261, 'HARD POINTS',      True, sm_blinkback, False);
     BoxUpdate(2, 3, 91262, 'PREV GROUP',       True, sm_blinkback, False);
     BoxUpdate(2, 4, 91263, 'NEXT GROUP',       True, sm_blinkback, False);
     BoxUpdate(2, 6, 91264, 'PREV SUBSYSTEM',   True, sm_blinkback, False);
     BoxUpdate(2, 7, 91265, 'NEXT SUBSYSTEM',   True, sm_blinkback, False);
 
-    BoxUpdate(3, 1, 91276, 'NEXT ROUTE',       True, sm_blinkback, False);
+    BoxUpdate(3, 1, 91306, 'FOCUS TARGET',     True, sm_blinkback, False);
     BoxUpdate(3, 7, 91266, 'PREV HOSTILE',     True, sm_blinkback, False);
 
     BoxUpdate(4, 1, 91270, 'TARGET WINGMAN 1', True, sm_blinkback, False);
@@ -2326,12 +2511,46 @@ begin
   end
 end;
 
-procedure TEliteContext.Context_Func5;
+procedure TEliteContext.Context_EliteDriveVRS;
+var
+  ASt     : string;
+  BtnMode : TSelectMode;
 begin
+  AreaPanels.Unselect;
+  BtnMode := sm_blinkback;
+  if IndexVRSMode  = 0 then begin
+    BtnMode := sm_directnotnull;
+    ASt     := 'NO STEP'
+  end else ASt := Format('STEP %d', [SubVRSIndex]);
   with FOwner do begin
-    BoxUpdate(2, 2, 91401, 'AUTO BRAK',           True, sm_blinkback, False);
-    BoxUpdate(2, 4, 91402, 'TURRET MODE',         True, sm_blinkback, False);
-    BoxUpdate(2, 6, 91403, 'SHIP Recall/Dismiss', True, sm_blinkback, False)
+    ResetAreas;
+    BoxUpdate(1, 1, 91404, 'SLIDE',               True, sm_blinkback, False);
+    BoxUpdate(1, 2, 91405, ASt,                   True, sm_blinkback, False);
+    BoxUpdate(1, 3, 91402, 'TURRET MODE',         True, sm_blinkback, False);
+    BoxUpdate(1, 4, 91239, 'FUNC',                True, sm_blinkback, False);
+    BoxUpdate(1, 5, 91403, 'SHIP Recall/Dismiss', True, sm_blinkback, False);
+    BoxUpdate(1, 6, 91269, '12H TARGET',          True, sm_blinkback, False);
+    BoxUpdate(1, 7, 91550, 'BACK',                True, sm_blinkback, False);
+
+    BoxUpdate(2, 4, 91406, 'UP VIEW',             True, BtnMode, False);
+
+    BoxUpdate(3, 1, 91282, 'LESS SPEED',          True, sm_blinkback, False);
+    BoxUpdate(3, 7, 91283, 'MORE SPEED',          True, sm_blinkback, False);
+
+    BoxUpdate(4, 2, 91408, 'STEER LEFT',          True, BtnMode, False);
+    BoxUpdate(4, 6, 91409, 'STEER RIGHT',         True, BtnMode, False);
+
+    BoxUpdate(5, 1, 91401, 'AUTO BRAK',           True, sm_blinkback, False);
+    BoxUpdate(5, 7, 91200, '',                    True, sm_blinkback, True);
+//    BoxUpdate(5, 7, 91411, 'INV SPEED',           True, sm_blinkback, False);
+
+    BoxUpdate(6, 1, 91570, 'SWITCH',              True, sm_blinkback, False);
+    BoxUpdate(6, 2, 91410, 'VERTICAL THRUST',     True, sm_blinkback, False);
+    BoxUpdate(6, 3, 91237, 'SHOOT 2',             True, sm_blinkback, False);
+    BoxUpdate(6, 4, 91407, 'DOWN VIEW',           True, BtnMode, False);
+    BoxUpdate(6, 5, 91236, 'SHOOT 1',             True, sm_blinkback, False);
+    BoxUpdate(6, 6, 91412, 'DRIVE ASSIST',        True, sm_blinkback, False);
+    BoxUpdate(6, 7, 91599, 'PAUSE',               True, sm_blinkback, False);
   end
 end;
 
@@ -2732,8 +2951,8 @@ end;
 
 function TEliteContext.IsDocked: Boolean;
 begin
-  { --- is docked or is landed }
-  with FOwner, FEliteStatus do Result := Landed or Docked
+  { --- is docked }
+  with FOwner, FEliteStatus do Result := Docked
 end;
 
 procedure TEliteContext.DoClicUnique(const Method: TGearTypeNotify);
@@ -2782,6 +3001,102 @@ begin
   ComPanelOpened := True;
   Menu_display;
   with FOwner, FContext do if not DisplayPanel then FunctionSound
+end;
+
+procedure TEliteContext.DoDriveAssist;
+begin
+  with FOwner, FEliteManager do DriveAssist
+end;
+
+procedure TEliteContext.DoDriveLandingBackThrust(NotLanding: Boolean);
+var
+  index: Integer;
+begin
+  if NotLanding then index := 0 else index := IndexLandingDrive;
+  with FOwner, FEliteManager do NavLauncherThrust(LandingBackwardThrust, LandingBackwardThrust, Index)
+end;
+
+procedure TEliteContext.DoDriveLandingForwardThrust(NotLanding: Boolean);
+var
+  index: Integer;
+begin
+  if NotLanding then index := 0 else index := IndexLandingDrive;
+  with FOwner, FEliteManager do NavLauncherThrust(LandingForwardThrust, LandingForwardThrust, Index)
+end;
+
+procedure TEliteContext.DoDriveLandingLeftThrust(NotLanding: Boolean);
+var
+  index: Integer;
+begin
+  if NotLanding then index := 0 else index := IndexLandingDrive;
+  with FOwner, FEliteManager do NavLauncherThrust(LandingLeftThrust, LandingLeftThrust, Index)
+end;
+
+procedure TEliteContext.DoDriveLandingPitch;
+begin
+  IndexOfPitchLanding := (IndexOfPitchLanding + 1) mod 3;
+  FOwner.FContext.FunctionSound;
+  Drive_display
+end;
+
+procedure TEliteContext.DoDriveLandingPitchUp;
+begin
+  with FOwner, FEliteManager do NavLauncher(nil, LandingPitchUp, IndexOfPitchLanding + 1)
+end;
+
+procedure TEliteContext.DoDriveLandingRightThrust(NotLanding: Boolean);
+var
+  index: Integer;
+begin
+  if NotLanding then index := 0 else index := IndexLandingDrive;
+  with FOwner, FEliteManager do NavLauncherThrust(LandingRightThrust, LandingRightThrust, Index)
+end;
+
+procedure TEliteContext.DoDriveLandingRollLeft;
+begin
+  with FOwner, FEliteManager do NavLauncher(nil, LandingRollLeft, IndexOfPitchLanding + 1)
+end;
+
+procedure TEliteContext.DoDriveLandingRollRight;
+begin
+  with FOwner, FEliteManager do NavLauncher(nil, LandingRollRight, IndexOfPitchLanding + 1)
+end;
+
+procedure TEliteContext.DoDriveLandingSlide;
+begin
+  IndexLandingDrive := 0;
+  FOwner.FContext.FunctionSound;
+  Drive_display
+end;
+
+procedure TEliteContext.DoDriveLandingStep;
+begin
+  if IndexLandingDrive = 0 then IndexLandingDrive := SubLandingDriveIndex
+  else begin
+    IndexLandingDrive := (IndexLandingDrive + 1) mod 4;
+    if IndexLandingDrive = 0 then IndexLandingDrive := 1;
+    SubLandingDriveIndex := IndexLandingDrive
+  end;
+  FOwner.FContext.FunctionSound;
+  Drive_display
+end;
+
+procedure TEliteContext.DoDriveLandingUpThrust(NotLanding: Boolean);
+var
+  index: Integer;
+begin
+  if NotLanding then index := 0 else index := IndexLandingDrive;
+  with FOwner, FEliteManager do NavLauncherThrust(LandingUpThrust, LandingUpThrust, Index)
+end;
+
+procedure TEliteContext.DoDriveLandingYawLeft;
+begin
+  with FOwner, FEliteManager do NavLauncher(nil, LandingYawLeft, IndexOfPitchLanding + 1)
+end;
+
+procedure TEliteContext.DoDriveLandingYawRight;
+begin
+  with FOwner, FEliteManager do NavLauncher(nil, LandingYawRight, IndexOfPitchLanding + 1)
 end;
 
 procedure TEliteContext.DoDSDBack;
@@ -2988,6 +3303,19 @@ begin
     end;
 end;
 
+procedure TEliteContext.DoDriveLandingDownThrust(NotLanding: Boolean);
+var
+  index: Integer;
+begin
+  if NotLanding then index := 0 else index := IndexLandingDrive;
+  with FOwner, FEliteManager do NavLauncherThrust(LandingDownThrust, LandingDownThrust, Index)
+end;
+
+procedure TEliteContext.DoLandingPitchDown;
+begin
+  with FOwner, FEliteManager do NavLauncher(nil, LandingPitchDown, IndexOfPitchLanding + 1)
+end;
+
 procedure TEliteContext.DoLeftPanelShow(DisplayPanel: boolean);
 begin
   with FOwner, FEliteManager do if DisplayPanel then DoClicUnique(LeftPanel);
@@ -2998,8 +3326,8 @@ end;
 
 procedure TEliteContext.DoMapGalaxyShow(DisplayMap: boolean);
 begin
-  with FOwner, EliteManager, FContext do begin
-    MapCalled              := kmc_galaxy;
+  with FOwner, FEliteManager, FContext do begin
+    MapCalled := kmc_galaxy;
     if DisplayMap then MapGalaxy;
     Menu_display;
     FunctionSound
@@ -3008,8 +3336,8 @@ end;
 
 procedure TEliteContext.DoMapSystemShow(DisplayMap: boolean);
 begin
-  with FOwner, EliteManager, FContext do begin
-    MapCalled              := kmc_system;
+  with FOwner, FEliteManager, FContext do begin
+    MapCalled := kmc_system;
     if DisplayMap then MapSystem;
     Menu_display;
     FunctionSound
@@ -3054,7 +3382,7 @@ begin
   if not WithMapChecked then
     if not WithPanelChecked then
       if not WithComChecked then Back_
-end;
+end; {DoMenuEchap}
 
 procedure TEliteContext.DoMenuEnter;
 begin
@@ -3064,8 +3392,6 @@ begin
     FunctionSound
   end
 end;
-
-{DoMenuEchap}
 
 procedure TEliteContext.DoNavBack;
 
@@ -3130,12 +3456,12 @@ end; {DoNavBack}
 
 procedure TEliteContext.DoNavEst;
 begin
-  with FOwner, EliteManager do NavLauncher(Est, Est, IndexMode)
+  with FOwner, FEliteManager do NavLauncher(Est, Est, IndexMode)
 end;
 
 procedure TEliteContext.DoNavFils;
 begin
-  with FOwner, EliteManager do NavLauncher(Fils, Fils, IndexMode)
+  with FOwner, FEliteManager do NavLauncher(Fils, Fils, IndexMode)
 end;
 
 procedure TEliteContext.DoNavModeChange;
@@ -3152,17 +3478,27 @@ end;
 
 procedure TEliteContext.DoNavNord;
 begin
-  with FOwner, EliteManager do NavLauncher(Nord, Nord, IndexMode)
+  with FOwner, FEliteManager do NavLauncher(Nord, Nord, IndexMode)
+end;
+
+procedure TEliteContext.DoNavNordEst;
+begin
+  with FOwner, FEliteManager do NavLauncher(NordEst, NordEst, IndexMode)
+end;
+
+procedure TEliteContext.DoNavNordOuest;
+begin
+  with FOwner, FEliteManager do NavLauncher(NordOuest, NordOuest, IndexMode)
 end;
 
 procedure TEliteContext.DoNavOuest;
 begin
-  with FOwner, EliteManager do NavLauncher(Ouest, Ouest, IndexMode)
+  with FOwner, FEliteManager do NavLauncher(Ouest, Ouest, IndexMode)
 end;
 
 procedure TEliteContext.DoNavPere;
 begin
-  with FOwner, EliteManager do NavLauncher(Pere, Pere, IndexMode)
+  with FOwner, FEliteManager do NavLauncher(Pere, Pere, IndexMode)
 end;
 
 procedure TEliteContext.DoNavSlide;
@@ -3174,7 +3510,17 @@ end;
 
 procedure TEliteContext.DoNavSud;
 begin
-  with FOwner, EliteManager do NavLauncher(Sud, Sud, IndexMode)
+  with FOwner, FEliteManager do NavLauncher(Sud, Sud, IndexMode)
+end;
+
+procedure TEliteContext.DoNavSudEst;
+begin
+  with FOwner, FEliteManager do NavLauncher(SudEst, SudEst, IndexMode)
+end;
+
+procedure TEliteContext.DoNavSudOuest;
+begin
+  with FOwner, FEliteManager do NavLauncher(SudOuest, SudOuest, IndexMode)
 end;
 
 procedure TEliteContext.DoNextShip;
@@ -3323,16 +3669,81 @@ begin
   Step     := Value
 end;
 
+procedure TEliteContext.DoVRSDownView;
+begin
+  with FOwner, FEliteManager, FEliteStatus do
+    if SrvTurretView then NavLauncher(Sud, Sud, IndexVRSMode)
+end;
+
+procedure TEliteContext.DoVRSReversePropulsion;
+begin
+  with FOwner, FEliteManager, FEliteStatus do PropulsionReverse
+//    if InSrv then PropulsionReverse
+end;
+
+procedure TEliteContext.DoVRSSlide;
+begin
+  IndexVRSMode := 0;
+  FOwner.FContext.FunctionSound;
+  Drive_display
+end;
+
+procedure TEliteContext.DoVRSStep;
+begin
+  if IndexVRSMode = 0 then IndexVRSMode := SubVRSIndex
+  else begin
+    IndexVRSMode := (IndexVRSMode + 1) mod 4;
+    if IndexVRSMode = 0 then IndexVRSMode := 1;
+    SubVRSIndex := IndexVRSMode
+  end;
+  FOwner.FContext.FunctionSound;
+  Drive_display
+end;
+
+procedure TEliteContext.DoVRSTurnLeft;
+begin
+  with FOwner, FEliteManager, FEliteStatus do
+    if SrvTurretView then NavLauncher(TurnLeft, TurnLeft, IndexVRSMode)
+      else NavLauncher(Ouest, Ouest, IndexVRSMode)
+end;
+
+procedure TEliteContext.DoVRSTurnRight;
+begin
+  with FOwner, FEliteManager, FEliteStatus do
+    if SrvTurretView then NavLauncher(TurnRight, TurnRight, IndexVRSMode)
+      else NavLauncher(Est, Est, IndexVRSMode)
+end;
+
 procedure TEliteContext.DoVRSTurret;
 begin
   with FOwner, FEliteManager, FEliteStatus do if InSrv then VRSTurret
+end;
+
+procedure TEliteContext.DoVRSUpView;
+begin
+  with FOwner, FEliteManager, FEliteStatus do
+    if SrvTurretView then NavLauncher(Nord, Nord, IndexVRSMode)
+end;
+
+procedure TEliteContext.DoVRSVerticalThrust;
+begin
+  with FOwner, FEliteManager, FEliteStatus do
+    if InSrv then VerticalThruster(1500)
+    
 end;
 
 procedure TEliteContext.Drive_display;
 begin
   CurrentDisplay := kd_drive;
   CurrentHud     := kh_drive;
-  FOwner.UpdateZone( Context_EliteDrive )
+  with FOwner, FEliteStatus do
+    if InSrv then FOwner.UpdateZone( Context_EliteDriveVRS )
+      else
+    if HardpointDeployed then FOwner.UpdateZone( Context_EliteDriveCombat )
+      else
+    if LandinGearDown then FOwner.UpdateZone( Context_EliteDriveLanding )
+      else
+    FOwner.UpdateZone( Context_EliteDrive )
 end;
 
 procedure TEliteContext.DSD_display(forced: Boolean);
@@ -3400,8 +3811,8 @@ begin
       91233 : DoNavEst;                         //Yaw right
       91234 : DoNavPere;                        //Roll left
       91235 : DoNavFils;                        //Roll right
-      91236 : PrimaryFire(10);                  //Primary fire
-      91237 : SecondaryFire(10);                //Secondary fire
+      91236 : PrimaryFire(300);                 //Primary fire
+      91237 : SecondaryFire(300);               //Secondary fire
       91238 : DoClic(DoNavModeChange);          //Mode
       91239 : DoClic(Func_display);             //Display functions
       91282 : DoClic(Deceleration);             //Less speed
@@ -3422,49 +3833,49 @@ begin
 
       { --- Functions actions }
       91240 : AssignFunc(0);
-      91241 : DoComPanelShow(True);          //Top Panel
-      91242 : DoLeftPanelShow(True);         //Left Panel
-      91243 : DoRightPanelShow(True);        //Right Panel
-      91244 : DoRolePanelShow(True);         //Bottom Panel
+      91241 : DoComPanelShow(True);             //Top Panel
+      91242 : DoLeftPanelShow(True);            //Left Panel
+      91243 : DoRightPanelShow(True);           //Right Panel
+      91244 : DoRolePanelShow(True);            //Bottom Panel
       91245 : ; //null
-      91246 : DoFriendsMenuShow;             //Friends menu
-      91247 : DoBackMenuShow;                //Back to menu
-      91248 : DoMapSystemShow(True);         //System map
-      91249 : DoMapGalaxyShow(True);         //Galaxy map
+      91246 : DoFriendsMenuShow;                //Friends menu
+      91247 : DoBackMenuShow;                   //Back to menu
+      91248 : DoMapSystemShow(True);            //System map
+      91249 : DoMapGalaxyShow(True);            //Galaxy map
 
       91250 : AssignFunc(1);
-      91251 : DoClicUnique(LandingGear);     //Landing gear
-      91252 : DoClicUnique(CargoScoop);      //Cargo scoop
-      91253 : DoClicUnique(NightVision);     //Night vision
-      91254 : DoClicUnique(Searchlight);     //Spotlight
-      91255 : DoClicUnique(CockpitMode);     //Cockpit mode
-      91256 : PipeMoteur;                    //Pipe engines
-      91257 : PipeSystem;                    //Pipe systems
-      91258 : PipeArmes;                     //Pipe weapons
-      91259 : DoClicUnique(PipeReset);       //Default
-      91277 : DoACSShow(True);               //ACS
-      91278 : DoClicUnique(ChaffLauncher);   //Chaff launcher
-      91279 : DoClicUnique(ShieldCell);      //Shield cell
-      91280 : DoClicUnique(HeatSink);        //Heat sink
-      91281 : DoClicUnique(ChargeECM);       //Charge ECM
+      91251 : DoClicUnique(LandingGear);        //Landing gear
+      91252 : DoClicUnique(CargoScoop);         //Cargo scoop
+      91253 : DoClicUnique(NightVision);        //Night vision
+      91254 : DoClicUnique(Searchlight);        //Spotlight
+      91255 : DoClicUnique(CockpitMode);        //Cockpit mode
+      91256 : PipeMoteur;                       //Pipe engines
+      91257 : PipeSystem;                       //Pipe systems
+      91258 : PipeArmes;                        //Pipe weapons
+      91259 : DoClicUnique(PipeReset);          //Default
+      91277 : DoACSShow(True);                  //ACS
+      91278 : DoClicUnique(ChaffLauncher);      //Chaff launcher
+      91279 : DoClicUnique(ShieldCell);         //Shield cell
+      91280 : DoClicUnique(HeatSink);           //Heat sink
+      91281 : DoClicUnique(ChargeECM);          //Charge ECM
 
       91260 : AssignFunc(2);
-      91261 : DoClicUnique(HardPoint);       //Hard point
-      91262 : DoClic(PriorArmGroup);         //Fire group previous
-      91263 : DoClic(NextArmGroup);          //Fire group next
-      91264 : DoClic(PriorSubSystem);        //Previous subsystem
-      91265 : DoClic(NextSubSystem);         //Next subsystem
-      91266 : DoClic(MenacePrecedente);      //Previous hostile
-      91267 : DoClic(MenaceSuivante);        //Next hostile
-      91268 : DoClic(MenacePrincipale);      //Highest Threat
-      91269 : DoClic(DoTarget12h);           //12h Target
-      91270 : CibleOfAilier(1);              //Target wingman 1
-      91271 : CibleOfAilier(2);              //Target wingman 2
-      91272 : CibleOfAilier(3);              //Target wingman 3
-      91273 : DoClicUnique(FullSystem);      //Full systems
-      91274 : DoClicUnique(FullMoteur);      //Full engines
-      91275 : DoClicUnique(FullArme);        //Full weapons
-      91276 : DoClicUnique(NextSubSystem);   //Next route system
+      91261 : DoClicUnique(HardPoint);          //Hard point
+      91262 : DoClic(PriorArmGroup);            //Fire group previous
+      91263 : DoClic(NextArmGroup);             //Fire group next
+      91264 : DoClic(PriorSubSystem);           //Previous subsystem
+      91265 : DoClic(NextSubSystem);            //Next subsystem
+      91266 : DoClic(MenacePrecedente);         //Previous hostile
+      91267 : DoClic(MenaceSuivante);           //Next hostile
+      91268 : DoClic(MenacePrincipale);         //Highest Threat
+      91269 : DoClicUnique(DoTarget12h);        //12h Target
+      91270 : CibleOfAilier(1);                 //Target wingman 1
+      91271 : CibleOfAilier(2);                 //Target wingman 2
+      91272 : CibleOfAilier(3);                 //Target wingman 3
+      91273 : DoClicUnique(FullSystem);         //Full systems
+      91274 : DoClicUnique(FullMoteur);         //Full engines
+      91275 : DoClicUnique(FullArme);           //Full weapons
+      91276 : DoClicUnique(NextSubSystem);      //Next route system
 
       91300 : AssignFunc(3);
       91301 : DoClicUnique(DoOrderPanel);        //Open orders
@@ -3478,59 +3889,68 @@ begin
       91309 : DoClicUnique(DoStartFighter);      //Open/close Bottom panel
 
       91350 : AssignFunc(4);
-      91351 : DoClicUnique(Camera_ShipShow); //OPEN 91/92
-      91352 : DoClic(Camera_Prior);          //Prev camera
-      91353 : DoClic(Camera_Next);           //Next camera
-      91355 : DoClicUnique(Camera_Two);      //Cam 2
-      91356 : DoClicUnique(Camera_Three);    //Cam 3
-      91357 : DoClicUnique(Camera_Four);     //Cam 4
-      91358 : DoClicUnique(Camera_Five);     //Cam 5
-      91359 : DoClicUnique(Camera_Six);      //Cam 6
-      91360 : DoClicUnique(Camera_Seven);    //Cam 7
-      91361 : DoClicUnique(Camera_Eight);    //Cam 8
-      91362 : DoClicUnique(Camera_Nine);     //Cam 9
-      91363 : DoClicUnique(FreeCamera_Close); //ATH
+      91351 : DoClicUnique(Camera_ShipShow);      //OPEN 91/92
+      91352 : DoClic(Camera_Prior);               //Prev camera
+      91353 : DoClic(Camera_Next);                //Next camera
+      91355 : DoClicUnique(Camera_Two);           //Cam 2
+      91356 : DoClicUnique(Camera_Three);         //Cam 3
+      91357 : DoClicUnique(Camera_Four);          //Cam 4
+      91358 : DoClicUnique(Camera_Five);          //Cam 5
+      91359 : DoClicUnique(Camera_Six);           //Cam 6
+      91360 : DoClicUnique(Camera_Seven);         //Cam 7
+      91361 : DoClicUnique(Camera_Eight);         //Cam 8
+      91362 : DoClicUnique(Camera_Nine);          //Cam 9
+      91363 : DoClicUnique(FreeCamera_Close);     //ATH
 
       91400 : AssignFunc(5);
-      91401 : DoClicUnique(DoAutoBreak);     //Auto break
-      91402 : DoClicUnique(DoVRSTurret);     //Turret mode
-      91403 : DoClicUnique(DoShipDismissRecall); //Ship call/dismiss
+      91401 : DoClicUnique(DoAutoBreak);          //Auto break
+      91402 : DoClicUnique(DoVRSTurret);          //Turret mode
+      91403 : DoClicUnique(DoShipDismissRecall);  //Ship call/dismiss
+      91404 : DoClicUnique(DoVRSSlide);           //VRS Slide
+      91405 : DoClicUnique(DoVRSStep);            //VRS Step
+      91406 : DoVRSUpView;                        //VRS Turret up view
+      91407 : DoVRSDownView;                      //VRS Turret down view
+      91408 : DoVRSTurnLeft;                      //VRS Turn left
+      91409 : DoVRSTurnRight;                     //VRS Turn right
+      91410 : DoVRSVerticalThrust;                //VRS Vertical thrust
+      91411 : DoVRSReversePropulsion;             //VRS Reverse propulsion
+      91412 : DoClicUnique(DoDriveAssist);        //VRS Drive Assist
 
       { --- Galaxy map }
-      91420 : GalaxyMap_display;            //Display context galaxy map
-      91421 : DoClicUnique(DoGMBack);       //Back
-      91422 : DoClicUnique(DoGMSlide);      //Slide
-      91423 : DoClic(DoGMSteps);            //Steps
+      91420 : GalaxyMap_display;                  //Display context galaxy map
+      91421 : DoClicUnique(DoGMBack);             //Back
+      91422 : DoClicUnique(DoGMSlide);            //Slide
+      91423 : DoClic(DoGMSteps);                  //Steps
       91424 : ;//NULL
-      91425 : DoClicUnique(DoGMGoHome);     //Go home
-      91426 : DoClicUnique(DoGMAllSlide);   //All slide
-      91427 : DoClic(DoGMReward);           //Reward
-      91428 : DoClic(DoGMUp);               //Up
-      91429 : DoClic(DoGMUpRotate);         //Up rotate
-      91430 : DoClic(DoGMLeft);             //Left
-      91431 : DoClic(DoGMRight);            //Right
-      91432 : DoClic(DoGMDown);             //Down
-      91433 : DoClic(DoGMDownRotate);       //Down rotate
-      91434 : DoClic(DoGMZoomIn);           //Zoom in
-      91435 : DoClic(DoGMLeftRotate);       //Left rotate
-      91436 : DoClic(DoGMForward);          //Forward
-      91437 : DoClic(DoGMRightRotate);      //Right rotate
-      91438 : DoClic(DoGMZoomOut);          //Zoom out
+      91425 : DoClicUnique(DoGMGoHome);           //Go home
+      91426 : DoClicUnique(DoGMAllSlide);         //All slide
+      91427 : DoClic(DoGMReward);                 //Reward
+      91428 : DoClic(DoGMUp);                     //Up
+      91429 : DoClic(DoGMUpRotate);               //Up rotate
+      91430 : DoClic(DoGMLeft);                   //Left
+      91431 : DoClic(DoGMRight);                  //Right
+      91432 : DoClic(DoGMDown);                   //Down
+      91433 : DoClic(DoGMDownRotate);             //Down rotate
+      91434 : DoClic(DoGMZoomIn);                 //Zoom in
+      91435 : DoClic(DoGMLeftRotate);             //Left rotate
+      91436 : DoClic(DoGMForward);                //Forward
+      91437 : DoClic(DoGMRightRotate);            //Right rotate
+      91438 : DoClic(DoGMZoomOut);                //Zoom out
 
       { --- System map }
-      91450 : SystemMap_display;            //Display context system map
-      91451 : DoClic(DoSMSteps);            //Steps
+      91450 : SystemMap_display;                  //Display context system map
+      91451 : DoClic(DoSMSteps);                  //Steps
       91452 : ; //NULL
-      91453 : DoClicUnique(DoSMBack);       //Back
+      91453 : DoClicUnique(DoSMBack);             //Back
       91454 : ; //NULL
       91455 : ; //NULL
-      91456 : DoClic(DoSMGoUp);             //GO UP
-      91457 : DoClic(DoSMGoDown);           //GO DOWN
-      91458 : DoClic(DoSMGoLeft);           //GO LEFT
-      91459 : DoClic(DoSMGoRight);          //GO RIGHT
-      91460 : DoClic(DoSMZoomIn);           //ZOOM IN
-      91461 : DoClic(DoSMZoomOut);          //ZOOM OUT
-      91462 : DoClic(DoSMSlide);            //Slide
+      91456 : DoClic(DoSMGoUp);                   //GO UP
+      91457 : DoClic(DoSMGoDown);                 //GO DOWN
+      91458 : DoClic(DoSMGoLeft);                 //GO LEFT
+      91459 : DoClic(DoSMGoRight);                //GO RIGHT
+      91460 : DoClic(DoSMZoomIn);                 //ZOOM IN
+      91461 : DoClic(DoSMZoomOut);                //ZOOM OUT
+      91462 : DoClic(DoSMSlide);                  //Slide
 
       { --- Exploration FSS }
       91470 : ACS_display;
@@ -3551,7 +3971,7 @@ begin
       91485 : DoClic(DoACSPitchInc);
       91486 : DoClic(DoACSMiniZoomOut);
 
-      { --- Surface Analyse Area }
+      { --- Surface Analysis Area }
       91490 : DSD_display( IsDSDOpened );
       91491 : DoClic(DoDSDSlide);
       91492 : DoClic(DoDSDSteps);
@@ -3564,6 +3984,38 @@ begin
       91499 : DoClicUnique(DoDSDViewChange);
       91500 : DoClic(DoDSDPitchDown);
       91501 : DoClicUnique(DoDSDFire);
+
+      { --- Diagonal way }
+      91511 : DoNavNordOuest;
+      91512 : DoNavNordEst;
+      91513 : DoNavSudOuest;
+      91514 : DoNavSudEst;
+
+      { --- Drive landing or docking }
+      91521 : ; //NULL
+      91522 : DoDriveLandingSlide;
+      91523 : DoDriveLandingStep;
+      91524 : DoDriveLandingPitch;
+      91525 : DoDriveLandingPitchUp;
+      91526 : DoDriveLandingRollLeft;
+      91527 : DoDriveLandingBackThrust;
+      91528 : DoDriveLandingUpThrust;
+      91529 : DoDriveLandingForwardThrust;
+      91530 : DoDriveLandingRollRight;
+      91531 : DoDriveLandingYawLeft;
+      91532 : DoDriveLandingLeftThrust;
+      91533 : DoDriveLandingRightThrust;
+      91534 : DoDriveLandingYawRight;
+      91535 : DoDriveLandingDownThrust;
+      91536 : DoLandingPitchDown;
+
+      { --- FUNC DIV : Free Thrusting }
+      91537 : DoDriveLandingBackThrust(True);
+      91538 : DoDriveLandingUpThrust(True);
+      91539 : DoDriveLandingForwardThrust(True);
+      91542 : DoDriveLandingLeftThrust(True);
+      91543 : DoDriveLandingRightThrust(True);
+      91545 : DoDriveLandingDownThrust(True);
 
       { --- Sub contexts }
       91550 : DoNavBack;
@@ -3590,12 +4042,11 @@ begin
   with FOwner do begin
     UpdateZone( Context_Func );
     case IndexFunc of
-      0 : UpdateZone( Context_Func0 );
-      1 : UpdateZone( Context_Func1 );
-      2 : UpdateZone( Context_Func2 );
-      3 : UpdateZone( Context_Func3 );
-      4 : UpdateZone( Context_Func4 );
-      5 : UpdateZone( Context_Func5 );
+      0 : UpdateZone( Context_Func0 ); //Display panels area
+      1 : UpdateZone( Context_Func1 ); //Display div area
+      2 : UpdateZone( Context_Func2 ); //Display weapons area
+      3 : UpdateZone( Context_Func3 ); //Display fighter area
+      4 : UpdateZone( Context_Func4 ); //Display camera area
     end
   end
 end;
@@ -3651,14 +4102,29 @@ begin
   Result := KeyReadInt(ParamKey, 'IndexGMMode', 0)
 end;
 
+function TEliteContext.GetIndexLandingDrive: Integer;
+begin
+  Result := KeyReadInt(ParamKey, 'IndexLandingDrive')
+end;
+
 function TEliteContext.GetIndexMode: Integer;
 begin
-  Result := KeyReadInt(ParamKey, 'IndexMode', 0)
+  Result := KeyReadInt(ParamKey, 'IndexMode')
+end;
+
+function TEliteContext.GetIndexOfPitchLanding: Integer;
+begin
+  Result := KeyReadInt(ParamKey, 'IndexOfPitchLanding')
 end;
 
 function TEliteContext.GetIndexSMMode: Integer;
 begin
-  Result := KeyReadInt(ParamKey, 'IndexSMMode', 0)
+  Result := KeyReadInt(ParamKey, 'IndexSMMode')
+end;
+
+function TEliteContext.GetIndexVRSMode: Integer;
+begin
+  Result := KeyReadInt(ParamKey, 'IndexVRSMode')
 end;
 
 function TEliteContext.GetIsDSDOpened: Boolean;
@@ -3668,12 +4134,12 @@ end;
 
 function TEliteContext.GetMapCalled: TKindMapCall;
 begin
-  Result := TKindMapCall( KeyReadInt(ParamKey, 'MapCalled', 0) )
+  Result := TKindMapCall( KeyReadInt(ParamKey, 'MapCalled') )
 end;
 
 function TEliteContext.GetPanelCalled: TKindPanels;
 begin
-  Result := TKindPanels( KeyReadInt(ParamKey, 'PanelCalled', 0) )
+  Result := TKindPanels( KeyReadInt(ParamKey, 'PanelCalled') )
 end;
 
 function TEliteContext.GetSlideAssist: Boolean;
@@ -3716,9 +4182,19 @@ begin
   Result := KeyReadInt(ParamKey, 'SubIndex', 2)
 end;
 
+function TEliteContext.GetSubLandingDriveIndex: Integer;
+begin
+  Result := KeyReadInt(ParamKey, 'SubLandingDriveIndex', 2)
+end;
+
 function TEliteContext.GetSubSMIndex: Integer;
 begin
   Result := KeyReadInt(ParamKey, 'SubSMIndex', 2)
+end;
+
+function TEliteContext.GetSubVRSIndex: Integer;
+begin
+  Result := KeyReadInt(ParamKey, 'SubVRSIndex', 2)
 end;
 
 function TEliteContext.GetUnicStep: Boolean;
@@ -3729,11 +4205,15 @@ end;
 function TEliteContext.IsFlying: Boolean;
 begin
   with FOwner, FEliteStatus do begin
-    { --- not docked and not landed }
-    Result := not IsDocked;
-    { --- is in ship or SRV or fighter}
-    Result := Result and (InMainShip or InSrv or InFighter)
+    { --- Not docked and not landed }
+    Result := not IsDocked and not IsLanded;
   end
+end;
+
+function TEliteContext.IsLanded: Boolean;
+begin
+  { --- is Landed }
+  with FOwner, FEliteStatus do Result := Landed
 end;
 
 function TEliteContext.IsMapOpened: Boolean;
@@ -3757,7 +4237,7 @@ end;
 procedure TEliteContext.NavClic(const SensA: TContextNotify;
   const SensB: TIntANotify);
 begin
-  with FOwner, EliteManager do begin
+  with FOwner, FEliteManager do begin
     if SlideAssist then begin
       if Assigned(SensB) then SensB(120);
       Delay(SlideOffms)
@@ -3769,7 +4249,7 @@ end;
 procedure TEliteContext.NavLauncher(const MethA: TContextNotify;
   const MethB: TIntANotify; Index: Integer);
 begin
-  with FOwner, EliteManager do
+  with FOwner, FEliteManager do
     case Index of
       0 : NavClic(MethA, MethB);
       1 : MethB(90);
@@ -3781,7 +4261,7 @@ end;
 procedure TEliteContext.NavLauncherEx(const MethA: TContextNotify;
   const MethB: TIntegerNotify; Index: Integer);
 begin
-  with FOwner, EliteManager do
+  with FOwner, FEliteManager do
     case Index of
       0 : NavClic(MethA, MethB);
       1 : MethB(1, 90);
@@ -3790,10 +4270,22 @@ begin
     end
 end;
 
+procedure TEliteContext.NavLauncherThrust(const MethA: TContextNotify;
+  const MethB: TIntANotify; Index: Integer);
+begin
+  with FOwner, FEliteManager do
+    case Index of
+      0 : NavClic(MethA, MethB);
+      1 : MethB(360);
+      2 : MethB(720);
+      3 : MethB(1440);
+    end
+end;
+
 procedure TEliteContext.NavLauncher(const MethA: TContextNotify;
   const MethB: TIntegerNotify; Index: Integer);
 begin
-  with FOwner, EliteManager do
+  with FOwner, FEliteManager do
     case Index of
       0 : NavClic(MethA, MethB);
       1 : MethB(1, 120);
@@ -3805,7 +4297,7 @@ end;
 procedure TEliteContext.NavClic(const SensA: TContextNotify;
   const SensB: TIntegerNotify);
 begin
-  with FOwner, EliteManager do begin
+  with FOwner, FEliteManager do begin
     if SlideAssist then begin
       if Assigned(SensB) then SensB(1, 120);
       Delay(SlideOffms)
@@ -3815,8 +4307,7 @@ begin
 end;
 
 procedure TEliteContext.PauseBack;
-{ --- with Elite}
-
+{ --- For Elite }
   procedure DriveCase; begin
     case MapCalled of
       kmc_none   : Drive_display;
@@ -3843,7 +4334,7 @@ begin
 end;
 
 procedure TEliteContext.PauseFunctionBack;
-{ --- not with Elite }
+{ --- Not for Elite }
 begin
   if IsMapOpened then Menu_display
   else case DisplayBefore of
@@ -3904,14 +4395,29 @@ begin
   KeyWrite(ParamKey, 'IndexGMMode', Value)
 end;
 
+procedure TEliteContext.SetIndexLandingDrive(const Value: Integer);
+begin
+  KeyWrite(ParamKey, 'IndexLandingDrive', Value)
+end;
+
 procedure TEliteContext.SetIndexMode(const Value: Integer);
 begin
   KeyWrite(ParamKey, 'IndexMode', Value)
 end;
 
+procedure TEliteContext.SetIndexOfPitchLanding(const Value: Integer);
+begin
+  KeyWrite(ParamKey, 'IndexOfPitchLanding', Value)
+end;
+
 procedure TEliteContext.SetIndexSMMode(const Value: Integer);
 begin
   KeyWrite(ParamKey, 'IndexSMMode', Value)
+end;
+
+procedure TEliteContext.SetIndexVRSMode(const Value: Integer);
+begin
+  KeyWrite(ParamKey, 'IndexVRSMode', Value)
 end;
 
 procedure TEliteContext.SetIsDSDOpened(const Value: Boolean);
@@ -3969,9 +4475,19 @@ begin
   KeyWrite(ParamKey, 'SubIndex', Value)
 end;
 
+procedure TEliteContext.SetSubLandingDriveIndex(const Value: Integer);
+begin
+  KeyWrite(ParamKey, 'SubLandingDriveIndex', Value)
+end;
+
 procedure TEliteContext.SetSubSMIndex(const Value: Integer);
 begin
   KeyWrite(ParamKey, 'SubSMIndex', Value)
+end;
+
+procedure TEliteContext.SetSubVRSIndex(const Value: Integer);
+begin
+  KeyWrite(ParamKey, 'SubVRSIndex', Value)
 end;
 
 procedure TEliteContext.SetUnicStep(const Value: Boolean);
@@ -4007,7 +4523,7 @@ end;
 
 procedure TEliteContext.Step_display;
 begin
-  { --- Dont reset Step after used }
+  { --- Don't reset Step after use }
   UnicStep := False;
   FOwner.UpdateZone( Context_StepSelect )
 end;
@@ -4051,46 +4567,102 @@ begin
   {Automatic started}
   ThAreaTobii     := AAreaTobii;
   Old_Docked      := True;
+  Old_HardPoints  := False;
+  Old_InSRV       := False;
   FreeOnTerminate := True;
   Priority        := tpLower
 end;
 
 procedure TContextObserver.Execute;
 begin
-  { --- Terminate when app terminate and automatic instance free }
+  { --- Breaked when app terminate and automatic freed instance }
   while not Terminated and not Application.Terminated do begin
     Synchronize( Process );
-    ThDelay( 1050 )
+    { --- We suppose Status.json updated each second by Frontier }
+    ThDelay( 1024 )
   end
 end;
 
 procedure TContextObserver.Process;
-begin
-  with ThAreaTobii, FEliteStatus, FEliteManager, FElite do begin
-    { --- Update DSD view }
-    if GuiValue = gt_saamode then begin
+
+  procedure UpdateDSDView; begin
+    with ThAreaTobii, FEliteStatus, FElite do
+      if GuiValue = gt_saamode then begin
         if not IsDSDOpened then DSD_display( False )
-    end else
-        if IsDSDOpened then DoDSDBack;
-    { --- Update Panels view if app. restart }
-    case GuiValue of
-      gt_externalpanel : PanelCalled := kp_left;
-      gt_internalpanel : PanelCalled := kp_right;
-      gt_rolepanel     : PanelCalled := kp_bottom;
-      gt_commspanel    : ComPanelOpened := True;
-    end;
-    { --- Update menu ENTER when undock }
-    if (IsDocked <> Old_Docked) and SwitchUpdate then begin
-      if IsDocked then Menu_display else Drive_display;
-      SwitchUpdate := False
-    end;
-    Old_Docked := IsDocked
-  end
+      end else
+        if IsDSDOpened then DoDSDBack
+  end;
+
+  procedure UpdatePanelsView; begin
+    with ThAreaTobii, FEliteStatus, FElite do
+      case GuiValue of
+        gt_externalpanel : PanelCalled := kp_left;
+        gt_internalpanel : PanelCalled := kp_right;
+        gt_rolepanel     : PanelCalled := kp_bottom;
+        gt_commspanel    : ComPanelOpened := True;
+      end
+  end;
+
+  procedure UpdateWhenUndock; begin
+    with ThAreaTobii, FEliteStatus, FElite do
+      if (IsDocked <> Old_Docked) and SwitchUpdate then begin
+        if IsDocked then Menu_display else Drive_display;
+        SwitchUpdate := False
+      end
+  end;
+
+  function UpdateDriveInSrv:Boolean; begin
+    Result := False;
+    with ThAreaTobii, FEliteStatus, FElite do
+      if InSrv <> Old_InSRV then begin
+        Old_InSRV := InSrv;
+        Result    := True;
+        Drive_display
+      end
+  end;
+
+  procedure UpdateDriveDisplayForHardPoint; begin
+    with ThAreaTobii, FEliteStatus, FElite do
+      if (HardpointDeployed <> Old_HardPoints) and IsFlying then Drive_display
+  end;
+
+  procedure UpdateDriveDisplayWhenLanding; begin
+    with ThAreaTobii, FEliteStatus, FElite do
+      if (LandinGearDown <> Old_LandingGear) and not HardpointDeployed and
+       not IsDocked then Drive_display
+  end;
+
+  procedure SaveOnIteration; begin
+    with ThAreaTobii, FEliteStatus, FElite do begin
+      Old_Docked      := IsDocked;
+      Old_HardPoints  := HardpointDeployed;
+      Old_LandingGear := LandinGearDown;
+    end
+  end;
+
+begin
+  { --- Update DSD view }
+  UpdateDSDView;
+  { --- Update Panels view if app. restart }
+  UpdatePanelsView;
+  { --- Update menu when undock aftter ENTER clic }
+  UpdateWhenUndock;
+  { --- Update Drive display in SRV }
+  if not UpdateDriveInSrv then begin
+    { --- Update Drive display when Hardpoint deployed and on flying }
+    UpdateDriveDisplayForHardPoint;
+    { --- Update Drive display when Landing gear down and on flying
+          and Hardpoint not deployed }
+    UpdateDriveDisplayWhenLanding
+  end;
+  { --- Save current values for next iteration process }
+  SaveOnIteration
 end; {Process}
 
 procedure TContextObserver.ThDelay(ms: Cardinal);
 var S: Cardinal;
 begin
+  { --- Automatic free when app terminate }
   S := GetTickCount + ms;
   with Application do
     repeat
