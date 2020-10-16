@@ -268,7 +268,9 @@ type
     procedure DoVRSTurnRight;                     //VRS Turn right
     procedure DoVRSVerticalThrust;                //VRS Vertical thrust
     procedure DoVRSReversePropulsion;             //VRS Reverse propulsion
-    procedure DoDriveAssist;
+    procedure DoVRSDriveAssist;                   //VRS Drive assist enable/disable
+    procedure DoVRSShoot1;
+    procedure DoVRSShoot2;
 
     { --- Navigation notify actions }
     procedure NavLauncher(const MethA: TContextNotify; const MethB: TIntegerNotify;
@@ -576,6 +578,7 @@ type
     Old_HardPoints  : Boolean;
     Old_LandingGear : Boolean;
     Old_InSRV       : Boolean;
+    Old_TurretView  : Boolean;
     procedure ThDelay(ms: Cardinal);
     procedure Process;
   public
@@ -2337,14 +2340,18 @@ end;
 procedure TEliteContext.Context_Func;
 begin
   AreaPanels.Unselect;
-  with FOwner do begin
+  with FOwner, FEliteStatus do begin
     ResetAreas;
     BoxUpdate(1, 1, 91240, 'PANELS',        True, sm_blinkback, False);
     if not IsDocked then begin
       BoxUpdate(1, 2, 91250, 'DIV',           True, sm_blinkback, False);
-      BoxUpdate(1, 3, 91260, 'WEAPONS',       True, sm_blinkback, False);
-      BoxUpdate(1, 4, 91300, 'FIGHTER',       True, sm_blinkback, False);
-//      BoxUpdate(1, 6, 91400, 'SRV',           True, sm_blinkback, False)
+      if InSrv then begin
+        BoxUpdate(1, 3, 91200, '',              True, sm_blinkback, True);
+        BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True)
+      end else begin
+        BoxUpdate(1, 3, 91260, 'WEAPONS',       True, sm_blinkback, False);
+        BoxUpdate(1, 4, 91300, 'FIGHTER',       True, sm_blinkback, False)
+      end;
       BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True)
     end else begin
       BoxUpdate(1, 2, 91200, '',              True, sm_blinkback, True);
@@ -2352,7 +2359,9 @@ begin
       BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True);
       BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True)
     end;
-    BoxUpdate(1, 5, 91350, 'CAMERA',        True, sm_blinkback, False);
+    if InSrv
+      then BoxUpdate(1, 5, 91200, '',              True, sm_blinkback, True)
+      else BoxUpdate(1, 5, 91350, 'CAMERA',        True, sm_blinkback, False);
     BoxUpdate(1, 7, 91571, 'BACK',          True, sm_blinkback, False);
 
     BoxUpdate(2, 1, 91200, '',              True, sm_blinkback, True);
@@ -2415,30 +2424,52 @@ end;
 
 procedure TEliteContext.Context_Func1;
 begin
-  with FOwner do begin
-    BoxUpdate(2, 2, 91251, 'LANDING GEAR',     True, sm_blinkback, False);
-    BoxUpdate(2, 3, 91252, 'CARGO SCOOP',      True, sm_blinkback, False);
-    BoxUpdate(2, 4, 91253, 'NIGHT VISION',     True, sm_blinkback, False);
-    BoxUpdate(2, 5, 91254, 'SPOTLIGHT',        True, sm_blinkback, False);
-    BoxUpdate(2, 6, 91255, 'COCKPIT MODE',     True, sm_blinkback, False);
-    BoxUpdate(2, 7, 91277, 'S.A.A',            True, sm_blinkback, False);
+  with FOwner, FEliteStatus do
+    if InSrv then begin
 
-    BoxUpdate(3, 1, 91281, 'CHARGE ECM',       True, sm_blinkback, False);
+      BoxUpdate(2, 3, 91252, 'CARGO SCOOP',         True, sm_blinkback, False);
+      BoxUpdate(2, 5, 91403, 'SHIP Recall/Dismiss', True, sm_blinkback, False);
 
-    BoxUpdate(4, 1, 91279, 'SHIELD CELL',      True, sm_blinkback, False);
-    BoxUpdate(4, 4, 91538, 'UP THRUST',        True, sm_directnotnull, False);
-    BoxUpdate(4, 7, 91295, 'PREV SHIP',        True, sm_blinkback, False);
+      BoxUpdate(3, 7, 91266, 'PREV HOSTILE',        True, sm_blinkback, False);
 
-    BoxUpdate(5, 1, 91280, 'HEAT SINK',        True, sm_blinkback, False);
-    BoxUpdate(5, 3, 91542, 'LEFT THRUST',      True, sm_directnotnull, False);
-    BoxUpdate(5, 5, 91543, 'RIGHT THRUST',     True, sm_directnotnull, False);
-    BoxUpdate(5, 7, 91296, 'NEXT SHIP',        True, sm_blinkback, False);
+      BoxUpdate(4, 4, 91256, 'PIPE ENGINES',        True, sm_blinkback, False);
+      BoxUpdate(4, 7, 91267, 'NEXT HOSTILE',        True, sm_blinkback, False);
 
-    BoxUpdate(6, 1, 91278, 'CHAFF LAUNCHER',   True, sm_blinkback, False);
-    BoxUpdate(6, 3, 91537, 'BACKWARD THRUST',  True, sm_directnotnull, False);
-    BoxUpdate(6, 4, 91545, 'DOWN THRUST',      True, sm_directnotnull, False);
-    BoxUpdate(6, 5, 91539, 'FORWARD THRUST',   True, sm_directnotnull, False);
-  end
+      BoxUpdate(5, 3, 91257, 'PIPE SYSTEMS',        True, sm_blinkback, False);
+      BoxUpdate(5, 4, 91259, 'DEFAULT',             True, sm_blinkback, False);
+      BoxUpdate(5, 5, 91258, 'PIPE WEAPONS',        True, sm_blinkback, False);
+      BoxUpdate(5, 7, 91268, 'HIGEST THREAT',       True, sm_blinkback, False);
+
+      BoxUpdate(6, 3, 91273, 'FULL SYSTEMS',        True, sm_blinkback, False);
+      BoxUpdate(6, 4, 91274, 'FULL ENGINES',        True, sm_blinkback, False);
+      BoxUpdate(6, 5, 91275, 'FULL WEAPONS',        True, sm_blinkback, False);
+
+    end else begin
+
+      BoxUpdate(2, 2, 91251, 'LANDING GEAR',        True, sm_blinkback, False);
+      BoxUpdate(2, 3, 91252, 'CARGO SCOOP',         True, sm_blinkback, False);
+      BoxUpdate(2, 4, 91253, 'NIGHT VISION',        True, sm_blinkback, False);
+      BoxUpdate(2, 5, 91254, 'SPOTLIGHT',           True, sm_blinkback, False);
+      BoxUpdate(2, 6, 91255, 'COCKPIT MODE',        True, sm_blinkback, False);
+      BoxUpdate(2, 7, 91277, 'S.A.A',               True, sm_blinkback, False);
+
+      BoxUpdate(3, 1, 91281, 'CHARGE ECM',          True, sm_blinkback, False);
+
+      BoxUpdate(4, 1, 91279, 'SHIELD CELL',         True, sm_blinkback,  False);
+      BoxUpdate(4, 4, 91538, 'UP THRUST',           True, sm_directnotnull, False);
+      BoxUpdate(4, 7, 91295, 'PREV SHIP',           True, sm_blinkback, False);
+
+      BoxUpdate(5, 1, 91280, 'HEAT SINK',           True, sm_blinkback, False);
+      BoxUpdate(5, 3, 91542, 'LEFT THRUST',         True, sm_directnotnull, False);
+      BoxUpdate(5, 5, 91543, 'RIGHT THRUST',        True, sm_directnotnull, False);
+      BoxUpdate(5, 7, 91296, 'NEXT SHIP',           True, sm_blinkback, False);
+
+      BoxUpdate(6, 1, 91278, 'CHAFF LAUNCHER',      True, sm_blinkback, False);
+      BoxUpdate(6, 3, 91537, 'BACKWARD THRUST',     True, sm_directnotnull, False);
+      BoxUpdate(6, 4, 91545, 'DOWN THRUST',         True, sm_directnotnull, False);
+      BoxUpdate(6, 5, 91539, 'FORWARD THRUST',      True, sm_directnotnull, False);
+
+    end
 end;
 
 procedure TEliteContext.Context_Func2;
@@ -2522,13 +2553,13 @@ begin
     BtnMode := sm_directnotnull;
     ASt     := 'NO STEP'
   end else ASt := Format('STEP %d', [SubVRSIndex]);
-  with FOwner do begin
+  with FOwner, FEliteStatus do begin
     ResetAreas;
     BoxUpdate(1, 1, 91404, 'SLIDE',               True, sm_blinkback, False);
     BoxUpdate(1, 2, 91405, ASt,                   True, sm_blinkback, False);
     BoxUpdate(1, 3, 91402, 'TURRET MODE',         True, sm_blinkback, False);
     BoxUpdate(1, 4, 91239, 'FUNC',                True, sm_blinkback, False);
-    BoxUpdate(1, 5, 91403, 'SHIP Recall/Dismiss', True, sm_blinkback, False);
+
     BoxUpdate(1, 6, 91269, '12H TARGET',          True, sm_blinkback, False);
     BoxUpdate(1, 7, 91550, 'BACK',                True, sm_blinkback, False);
 
@@ -2546,9 +2577,13 @@ begin
 
     BoxUpdate(6, 1, 91570, 'SWITCH',              True, sm_blinkback, False);
     BoxUpdate(6, 2, 91410, 'VERTICAL THRUST',     True, sm_blinkback, False);
-    BoxUpdate(6, 3, 91237, 'SHOOT 2',             True, sm_blinkback, False);
+    if SrvTurretView
+      then BoxUpdate(6, 3, 91414, 'SCAN',         True, sm_blinkback, False)
+      else BoxUpdate(6, 3, 91200, '',             True, sm_blinkback, True);
+
+
     BoxUpdate(6, 4, 91407, 'DOWN VIEW',           True, BtnMode, False);
-    BoxUpdate(6, 5, 91236, 'SHOOT 1',             True, sm_blinkback, False);
+    BoxUpdate(6, 5, 91413, 'SHOOT 1',             True, sm_blinkback, False);
     BoxUpdate(6, 6, 91412, 'DRIVE ASSIST',        True, sm_blinkback, False);
     BoxUpdate(6, 7, 91599, 'PAUSE',               True, sm_blinkback, False);
   end
@@ -3003,9 +3038,9 @@ begin
   with FOwner, FContext do if not DisplayPanel then FunctionSound
 end;
 
-procedure TEliteContext.DoDriveAssist;
+procedure TEliteContext.DoVRSDriveAssist;
 begin
-  with FOwner, FEliteManager do DriveAssist
+  with FOwner, FEliteManager, FEliteStatus do if InSrv then DriveAssist
 end;
 
 procedure TEliteContext.DoDriveLandingBackThrust(NotLanding: Boolean);
@@ -3673,12 +3708,22 @@ procedure TEliteContext.DoVRSDownView;
 begin
   with FOwner, FEliteManager, FEliteStatus do
     if SrvTurretView then NavLauncher(Sud, Sud, IndexVRSMode)
+      else Deceleration
 end;
 
 procedure TEliteContext.DoVRSReversePropulsion;
 begin
-  with FOwner, FEliteManager, FEliteStatus do PropulsionReverse
-//    if InSrv then PropulsionReverse
+  with FOwner, FEliteManager, FEliteStatus do if InSrv then PropulsionReverse
+end;
+
+procedure TEliteContext.DoVRSShoot1;
+begin
+  with FOwner, FEliteManager, FEliteStatus do if InSrv then VRSPrimaryFire(1000)
+end;
+
+procedure TEliteContext.DoVRSShoot2;
+begin
+  with FOwner, FEliteManager, FEliteStatus do if InSrv then VRSSecondaryFire(5000)
 end;
 
 procedure TEliteContext.DoVRSSlide;
@@ -3716,13 +3761,14 @@ end;
 
 procedure TEliteContext.DoVRSTurret;
 begin
-  with FOwner, FEliteManager, FEliteStatus do if InSrv then VRSTurret
+  with FOwner, FEliteManager, FEliteStatus do if InSrv then VRSTurret;
 end;
 
 procedure TEliteContext.DoVRSUpView;
 begin
   with FOwner, FEliteManager, FEliteStatus do
     if SrvTurretView then NavLauncher(Nord, Nord, IndexVRSMode)
+      else Acceleration
 end;
 
 procedure TEliteContext.DoVRSVerticalThrust;
@@ -3906,15 +3952,17 @@ begin
       91401 : DoClicUnique(DoAutoBreak);          //Auto break
       91402 : DoClicUnique(DoVRSTurret);          //Turret mode
       91403 : DoClicUnique(DoShipDismissRecall);  //Ship call/dismiss
-      91404 : DoClicUnique(DoVRSSlide);           //VRS Slide
-      91405 : DoClicUnique(DoVRSStep);            //VRS Step
+      91404 : DoClic(DoVRSSlide);                 //VRS Slide
+      91405 : DoClic(DoVRSStep);                  //VRS Step
       91406 : DoVRSUpView;                        //VRS Turret up view
       91407 : DoVRSDownView;                      //VRS Turret down view
       91408 : DoVRSTurnLeft;                      //VRS Turn left
       91409 : DoVRSTurnRight;                     //VRS Turn right
       91410 : DoVRSVerticalThrust;                //VRS Vertical thrust
       91411 : DoVRSReversePropulsion;             //VRS Reverse propulsion
-      91412 : DoClicUnique(DoDriveAssist);        //VRS Drive Assist
+      91412 : DoClicUnique(DoVRSDriveAssist);     //VRS Drive Assist
+      91413 : DoVRSShoot1;
+      91414 : DoVRSShoot2;
 
       { --- Galaxy map }
       91420 : GalaxyMap_display;                  //Display context galaxy map
@@ -4569,6 +4617,7 @@ begin
   Old_Docked      := True;
   Old_HardPoints  := False;
   Old_InSRV       := False;
+  Old_TurretView  := False;
   FreeOnTerminate := True;
   Priority        := tpLower
 end;
@@ -4605,6 +4654,13 @@ procedure TContextObserver.Process;
 
   procedure UpdateWhenUndock; begin
     with ThAreaTobii, FEliteStatus, FElite do
+      { --- When docking }
+      if (IsDocked <> Old_Docked) and not Old_Docked then Menu_display
+        else
+      { --- When undocking }
+      if (IsDocked <> Old_Docked) and Old_Docked then Drive_display
+        else
+      { --- Switch used }
       if (IsDocked <> Old_Docked) and SwitchUpdate then begin
         if IsDocked then Menu_display else Drive_display;
         SwitchUpdate := False
@@ -4632,11 +4688,17 @@ procedure TContextObserver.Process;
        not IsDocked then Drive_display
   end;
 
+  procedure UpdateDriveWithTurret; begin
+    with ThAreaTobii, FEliteStatus, FElite do
+      if InSrv and (SrvTurretView <> Old_TurretView) then Drive_display
+  end;
+
   procedure SaveOnIteration; begin
     with ThAreaTobii, FEliteStatus, FElite do begin
       Old_Docked      := IsDocked;
       Old_HardPoints  := HardpointDeployed;
       Old_LandingGear := LandinGearDown;
+      Old_TurretView  := SrvTurretView
     end
   end;
 
@@ -4647,6 +4709,8 @@ begin
   UpdatePanelsView;
   { --- Update menu when undock aftter ENTER clic }
   UpdateWhenUndock;
+  { --- Update Drive display when turret mode change }
+  UpdateDriveWithTurret;
   { --- Update Drive display in SRV }
   if not UpdateDriveInSrv then begin
     { --- Update Drive display when Hardpoint deployed and on flying }
