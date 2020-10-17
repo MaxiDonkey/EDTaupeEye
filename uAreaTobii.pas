@@ -215,6 +215,8 @@ type
     procedure SetIndexVRSMode(const Value: Integer);
     function  GetSubVRSIndex: Integer;
     procedure SetSubVRSIndex(const Value: Integer);
+    function  GetIsFSSOpened: Boolean;
+    procedure SetIsFSSOpened(const Value: Boolean);
   public
     { --- Lauch and retieve Elite state }
     procedure TryLaunchOnMenuDisplay;
@@ -227,7 +229,7 @@ type
     procedure Func_display;
     procedure GalaxyMap_display;
     procedure SystemMap_display;
-    procedure ACS_display;
+    procedure ACS_display(forced: Boolean);
     procedure DSD_display(forced: Boolean);
     procedure DoMenuEchap;
     procedure DoMenuEnter;
@@ -277,6 +279,10 @@ type
       Index: Integer); overload;
     procedure NavLauncherEx(const MethA: TContextNotify; const MethB: TIntegerNotify;
       Index: Integer);
+    procedure NavLauncherVRS(const MethA: TContextNotify; const MethB: TIntANotify;
+      Index: Integer); overload;
+    procedure NavLauncherVRS(const MethA: TContextNotify; const MethB: TIntegerNotify;
+      Index: Integer); overload;
     procedure DoNavModeChange;
     procedure DoNavSlide;
     procedure DoNavNord;
@@ -430,6 +436,8 @@ type
     property PanelCalled: TKindPanels read GetPanelCalled write SetPanelCalled;
     { --- Indic Opened DSD }
     property IsDSDOpened: Boolean read GetIsDSDOpened write SetIsDSDOpened;
+    { --- Indic Opened FSS }
+    property IsFSSOpened: Boolean read GetIsFSSOpened write SetIsFSSOpened;
     { --- Hud selected }
     property CurrentHud: TKindHud read GetCurrentHud write SetCurrentHud;
     { --- Indic for Process Thread to update menu SWITH area }
@@ -1886,10 +1894,18 @@ end;
 
 { TEliteContext }
 
-procedure TEliteContext.ACS_display;
+procedure TEliteContext.ACS_display(forced: Boolean);
+
+  procedure Process; begin
+    IsFSSOpened    := True;
+    CurrentDisplay := kd_fss;
+    FOwner.UpdateZone( Context_ACS )
+  end;
+
 begin
-  CurrentDisplay := kd_fss;
-  FOwner.UpdateZone( Context_ACS )
+  if forced then Process
+    else
+  if not IsFSSOpened then Process
 end;
 
 procedure TEliteContext.AssignFunc(const Index: Integer);
@@ -2852,6 +2868,7 @@ begin
   ComPanelOpened        := False;
   PanelCalled           := kp_none;
   IsDSDOpened           := False;
+  IsFSSOpened           := False;
   FSwitchUpdate         := False;
 end;
 
@@ -2862,6 +2879,7 @@ end;
 
 procedure TEliteContext.DoACSBack;
 begin
+  IsFSSOpened := False;
   with FOwner, FEliteManager do ACSClose;
   Drive_display
 end;
@@ -2926,7 +2944,7 @@ begin
    if SuperCruise then begin
      if DisplayPanel then ModeACS;
      { --- WARNING ExplorationFSS must be opened }
-     ACS_display;
+     ACS_display(IsFSSOpened);
      FunctionSound
   end
 end;
@@ -2934,7 +2952,8 @@ end;
 procedure TEliteContext.DoACSSlide;
 begin
   IndexACSMode := 0;
-  ACS_display
+  ACS_display(IsFSSOpened);
+  FOwner.FContext.FunctionSound;
 end;
 
 procedure TEliteContext.DoACSSteps;
@@ -2946,7 +2965,7 @@ begin
     SubACSIndex := IndexACSMode;
   end;
   FOwner.FContext.FunctionSound;
-  ACS_display
+  ACS_display(IsFSSOpened)
 end;
 
 procedure TEliteContext.DoACSYawDec;
@@ -3040,7 +3059,8 @@ end;
 
 procedure TEliteContext.DoVRSDriveAssist;
 begin
-  with FOwner, FEliteManager, FEliteStatus do if InSrv then DriveAssist
+  with FOwner, FEliteManager do
+    if FEliteStatus.InSrv then DriveAssist
 end;
 
 procedure TEliteContext.DoDriveLandingBackThrust(NotLanding: Boolean);
@@ -3707,7 +3727,7 @@ end;
 procedure TEliteContext.DoVRSDownView;
 begin
   with FOwner, FEliteManager, FEliteStatus do
-    if SrvTurretView then NavLauncher(Sud, Sud, IndexVRSMode)
+    if SrvTurretView then NavLauncherVRS(Sud, Sud, IndexVRSMode)
       else Deceleration
 end;
 
@@ -3718,12 +3738,12 @@ end;
 
 procedure TEliteContext.DoVRSShoot1;
 begin
-  with FOwner, FEliteManager, FEliteStatus do if InSrv then VRSPrimaryFire(1000)
+  with FOwner, FEliteManager, FEliteStatus do if InSrv then VRSPrimaryFire(1200)
 end;
 
 procedure TEliteContext.DoVRSShoot2;
 begin
-  with FOwner, FEliteManager, FEliteStatus do if InSrv then VRSSecondaryFire(5000)
+  with FOwner, FEliteManager, FEliteStatus do if InSrv then VRSSecondaryFire(5500)
 end;
 
 procedure TEliteContext.DoVRSSlide;
@@ -3748,14 +3768,14 @@ end;
 procedure TEliteContext.DoVRSTurnLeft;
 begin
   with FOwner, FEliteManager, FEliteStatus do
-    if SrvTurretView then NavLauncher(TurnLeft, TurnLeft, IndexVRSMode)
+    if SrvTurretView then NavLauncherVRS(TurnLeft, TurnLeft, IndexVRSMode)
       else NavLauncher(Ouest, Ouest, IndexVRSMode)
 end;
 
 procedure TEliteContext.DoVRSTurnRight;
 begin
   with FOwner, FEliteManager, FEliteStatus do
-    if SrvTurretView then NavLauncher(TurnRight, TurnRight, IndexVRSMode)
+    if SrvTurretView then NavLauncherVRS(TurnRight, TurnRight, IndexVRSMode)
       else NavLauncher(Est, Est, IndexVRSMode)
 end;
 
@@ -3767,7 +3787,7 @@ end;
 procedure TEliteContext.DoVRSUpView;
 begin
   with FOwner, FEliteManager, FEliteStatus do
-    if SrvTurretView then NavLauncher(Nord, Nord, IndexVRSMode)
+    if SrvTurretView then NavLauncherVRS(Nord, Nord, IndexVRSMode)
       else Acceleration
 end;
 
@@ -3775,7 +3795,6 @@ procedure TEliteContext.DoVRSVerticalThrust;
 begin
   with FOwner, FEliteManager, FEliteStatus do
     if InSrv then VerticalThruster(1500)
-    
 end;
 
 procedure TEliteContext.Drive_display;
@@ -4001,7 +4020,7 @@ begin
       91462 : DoClic(DoSMSlide);                  //Slide
 
       { --- Exploration FSS }
-      91470 : ACS_display;
+      91470 : ACS_display( IsFSSOpened );
       91471 : DoClic(DoACSSlide);
       91472 : DoClic(DoACSSteps);
       91473 : DoClic(DoACSZoomIn);
@@ -4180,6 +4199,11 @@ begin
   Result := KeyReadBoolean(ParamKey, 'IsDSDOpened')
 end;
 
+function TEliteContext.GetIsFSSOpened: Boolean;
+begin
+  Result := KeyReadBoolean(ParamKey, 'IsFSSOpened')
+end;
+
 function TEliteContext.GetMapCalled: TKindMapCall;
 begin
   Result := TKindMapCall( KeyReadInt(ParamKey, 'MapCalled') )
@@ -4330,6 +4354,30 @@ begin
     end
 end;
 
+procedure TEliteContext.NavLauncherVRS(const MethA: TContextNotify;
+  const MethB: TIntegerNotify; Index: Integer);
+begin
+  with FOwner, FEliteManager do
+    case Index of
+      0 : NavClic(MethA, MethB);
+      1 : MethB(1, 60);
+      2 : MethB(1, 120);
+      3 : MethB(1, 180);
+    end
+end;
+
+procedure TEliteContext.NavLauncherVRS(const MethA: TContextNotify;
+  const MethB: TIntANotify; Index: Integer);
+begin
+  with FOwner, FEliteManager do
+    case Index of
+      0 : NavClic(MethA, MethB);
+      1 : MethB(60);
+      2 : MethB(120);
+      3 : MethB(180);
+    end
+end;
+
 procedure TEliteContext.NavLauncher(const MethA: TContextNotify;
   const MethB: TIntegerNotify; Index: Integer);
 begin
@@ -4369,7 +4417,7 @@ begin
     kd_mainmenu  : MainMenu_display;
     kd_menu      : Menu_display;
     kd_drive     : DriveCase;
-    kd_fss       : ACS_display;
+    kd_fss       : ACS_display( IsFSSOpened );
     kd_saa       : DSD_display( IsDSDOpened );
     kd_galaxymap : GalaxyMap_display;
     kd_systemmap : SystemMap_display;
@@ -4471,6 +4519,11 @@ end;
 procedure TEliteContext.SetIsDSDOpened(const Value: Boolean);
 begin
   KeyWrite(ParamKey, 'IsDSDOpened', Value)
+end;
+
+procedure TEliteContext.SetIsFSSOpened(const Value: Boolean);
+begin
+  KeyWrite(ParamKey, 'IsFSSOpened', Value)
 end;
 
 procedure TEliteContext.SetMapCalled(const Value: TKindMapCall);
@@ -4642,6 +4695,14 @@ procedure TContextObserver.Process;
         if IsDSDOpened then DoDSDBack
   end;
 
+  procedure UpdateFSSView; begin
+    with ThAreaTobii, FEliteStatus, FElite do
+      if GuiValue = gt_fssmode then begin
+        if not IsFSSOpened then ACS_display( False )
+      end else
+        if IsFSSOpened then DoACSBack
+  end;
+
   procedure UpdatePanelsView; begin
     with ThAreaTobii, FEliteStatus, FElite do
       case GuiValue of
@@ -4703,9 +4764,6 @@ procedure TContextObserver.Process;
   end;
 
 begin
-  { --- Update DSD view }
-  UpdateDSDView;
-  { --- Update Panels view if app. restart }
   UpdatePanelsView;
   { --- Update menu when undock aftter ENTER clic }
   UpdateWhenUndock;
@@ -4719,6 +4777,11 @@ begin
           and Hardpoint not deployed }
     UpdateDriveDisplayWhenLanding
   end;
+  { --- Update DSD view }
+  UpdateDSDView;
+  { --- Update FSS view }
+  UpdateFSSView;
+  { --- Update Panels view if app. restart }
   { --- Save current values for next iteration process }
   SaveOnIteration
 end; {Process}
