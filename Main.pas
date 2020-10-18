@@ -102,7 +102,6 @@ end;
 procedure TMainForm.ContextObserverStart;
 begin
   ContextObserver := TContextObserver.Create(AreaTobii);
-//  ContextObserver.Start
 end;
 
 procedure TMainForm.DelayedStarterTimer(Sender: TObject);

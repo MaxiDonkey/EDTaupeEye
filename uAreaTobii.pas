@@ -52,7 +52,7 @@ type
     procedure DoOnBeforeSelect(Sender: TObject; OldValue, NewValue: Integer);
     procedure DoOnUnSelect(Sender: TObject; ATag: Integer);
 
-    procedure DoLaunchElite;
+    procedure DoLaunchElite(WithVocal: Boolean);
 
   private
     FBorder: Boolean;
@@ -110,8 +110,10 @@ type
 
   TEliteContext = class
   private
-    FOwner        : TAreaTobii;
-    FSwitchUpdate : Boolean;              //Update Switch display after ENTER
+    FOwner              : TAreaTobii;
+    FSwitchUpdate       : Boolean;              // --- Update Switch display after ENTER
+    FEliteAssistUsed    : Boolean;              // --- False on app start, True as soon an ED function choosed
+    FEliteAssistStarted : Boolean;              // --- False until an ED function selected (Thread observer process)
     { --- Local Tools }
     procedure StepSelector(const ATag: Integer);
     procedure DoClicUnique(const Method: TContextNotify); overload;
@@ -156,7 +158,7 @@ type
     function EliteContextRetrieveOnLaunch(Sender: TKindHud):Boolean;
 
   private
-    { --- Ascesseurs / Mutateurs }
+    { --- Ascessors / Mutators }
     function  GetStep: Integer;
     procedure SetStep(const Value: Integer);
     function  GetIndexFunc: Integer;
@@ -217,6 +219,8 @@ type
     procedure SetSubVRSIndex(const Value: Integer);
     function  GetIsFSSOpened: Boolean;
     procedure SetIsFSSOpened(const Value: Boolean);
+    function  GetVocalAppUsed: Boolean;
+    procedure SetVocalAppUsed(const Value: Boolean);
   public
     { --- Lauch and retieve Elite state }
     procedure TryLaunchOnMenuDisplay;
@@ -248,7 +252,7 @@ type
     procedure DoBackMenuShow;
     procedure DoFriendsMenuShow;
     procedure DoKeyBoardShow;
-    procedure DoNavBack;
+    procedure DoNavBack(EliteMapClose: Boolean = True);
 
     { --- Elite main function notify actions }
     procedure PauseBack;
@@ -392,6 +396,8 @@ type
     function IsLanded:Boolean;
     { --- Check if map opened }
     function IsMapOpened:Boolean;
+    { --- Is Pause mode enabled }
+    function IsPause: Boolean;
 
     property Step: Integer read GetStep write SetStep;
     property UnicStep: Boolean read GetUnicStep write SetUnicStep;
@@ -442,6 +448,8 @@ type
     property CurrentHud: TKindHud read GetCurrentHud write SetCurrentHud;
     { --- Indic for Process Thread to update menu SWITH area }
     property SwitchUpdate : Boolean read FSwitchUpdate write FSwitchUpdate;
+    { --- Indic for a vocal app used }
+    property VocalAppUsed: Boolean read GetVocalAppUsed write SetVocalAppUsed;
 
     constructor Create(const AOwner: TAreaTobii);
   end;
@@ -582,11 +590,14 @@ type
   TContextObserver = class(TTHread)
   private
     ThAreaTobii     : TAreaTobii;
+    FStart          : Boolean;
     Old_Docked      : Boolean;
     Old_HardPoints  : Boolean;
     Old_LandingGear : Boolean;
     Old_InSRV       : Boolean;
     Old_TurretView  : Boolean;
+    Old_Hud         : TKindHud;
+    Old_GuiValue    : TGuiType;
     procedure ThDelay(ms: Cardinal);
     procedure Process;
   public
@@ -691,10 +702,13 @@ begin
   inherited
 end;
 
-procedure TAreaTobii.DoLaunchElite;
+procedure TAreaTobii.DoLaunchElite(WithVocal: Boolean);
 begin
   with Context, FEliteManager, FEliteStatus, Elite do begin
-    CurrentDisplay := kd_elitemenu;
+    FEliteAssistUsed    := WithVocal;
+    FEliteAssistStarted := True;
+    CurrentDisplay      := kd_elitemenu;
+    VocalAppUsed        := WithVocal;
     UpdateZone( Context_Elite );
     FunctionSound;
     EliteForeGround
@@ -721,8 +735,8 @@ begin
      91001 : DoMainKeyBoardLaunch;
      91002 : ;
      91003 : ; //DataDico;
-     91004 : DoLaunchElite;
-     91005 : ;
+     91004 : DoLaunchElite(False);
+     91005 : DoLaunchElite(True);
      91006 : DoParametersLaunch;
      91007 : DoKeyBoardBack;
      { --- Keyboard actions }
@@ -1267,12 +1281,12 @@ begin
   AreaPanels.Unselect;
   with FOwner do begin
     Border := False;
-    BoxUpdate(1, 7, 91200, '',                True, sm_blinkback, True);    //91002
-    BoxUpdate(2, 7, 91001, 'KEYBOARD',        True, sm_blinkback, False);
-    BoxUpdate(3, 7, 91200, '',                True, sm_blinkback, True);    //91003
-    BoxUpdate(4, 7, 91004, 'ELITE DANGEROUS', True, sm_blinkback, False);
-    BoxUpdate(5, 7, 91200, '',                True, sm_blinkback, True);    //91005
-    BoxUpdate(6, 7, 91006, 'PARAMETERS',      True, sm_blinkback, False)
+    BoxUpdate(1, 7, 91200, '',                  True, sm_blinkback, True);    //91002
+    BoxUpdate(2, 7, 91001, 'KEYBOARD',          True, sm_blinkback, False);
+    BoxUpdate(3, 7, 91200, '',                  True, sm_blinkback, True);    //91003
+    BoxUpdate(4, 7, 91004, 'ELITE DANGEROUS',   True, sm_blinkback, False);
+    BoxUpdate(5, 7, 91005, 'ELITE WITH VOCAL',  True, sm_blinkback, False);    //91005
+    BoxUpdate(6, 7, 91006, 'PARAMETERS',        True, sm_blinkback, False)
   end;
   FunctionSound
 end;
@@ -1441,7 +1455,8 @@ begin
   with FOwner, FElite, FEliteManager, FContext do begin
     Border := False;
     case DisplayBeforeKeyboard of
-      kd_menu     : Menu_display;
+      kd_menu      : Menu_display;
+      kd_galaxymap : Context_GalaxyMap
       else MainMenu_display;
     end;
     DisplayBeforeKeyboard := kd_none
@@ -1824,7 +1839,14 @@ begin
     NullUpdate(3, [True, True, True, True, True, True, True]);
     NullUpdate(4, [True, True, True, True, True, True, True]);
     NullUpdate(5, [True, True, True, True, True, True, True]);
-    NullUpdate(6, [True, True, True, True, True, True, True])
+    NullUpdate(6, [True, True, True, True, True, True, True]);
+
+    TagsUpdate(1, [91200, 91200, 91200, 91200, 91200, 91200, 91200]);
+    TagsUpdate(2, [91200, 91200, 91200, 91200, 91200, 91200, 91200]);
+    TagsUpdate(3, [91200, 91200, 91200, 91200, 91200, 91200, 91200]);
+    TagsUpdate(4, [91200, 91200, 91200, 91200, 91200, 91200, 91200]);
+    TagsUpdate(5, [91200, 91200, 91200, 91200, 91200, 91200, 91200]);
+    TagsUpdate(6, [91200, 91200, 91200, 91200, 91200, 91200, 91200])
   end
 end;
 
@@ -1935,45 +1957,15 @@ begin
     BoxUpdate(1, 5, 91475, 'ZOOM OUT',      True, BtnMode, False);
     BoxUpdate(1, 6, 91476, 'HELP',          True, sm_blinkback, False);
     BoxUpdate(1, 7, 91477, 'BACK',          True, sm_blinkback, False);
-
-    BoxUpdate(2, 1, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(2, 2, 91478, 'RADIO DEC',     True, BtnMode, False);
-    BoxUpdate(2, 3, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(2, 4, 91479, 'PITCH INC',     True, BtnMode, False);
-    BoxUpdate(2, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(2, 6, 91480, 'RADIO INC',     True, BtnMode, False);
-    BoxUpdate(2, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(3, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(4, 1, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 2, 91481, 'YAW DEC',       True, BtnMode, False);
-    BoxUpdate(4, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 6, 91482, 'YAW INC',       True, BtnMode, False);
-    BoxUpdate(4, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(5, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
-
     BoxUpdate(6, 1, 91483, 'GET TARGET',    True, sm_blinkback, False);
-    BoxUpdate(6, 2, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(6, 3, 91484, 'MINI ZOOM IN',  True, sm_blinkback, False);
     BoxUpdate(6, 4, 91485, 'PITCH DEC',     True, BtnMode, False);
     BoxUpdate(6, 5, 91486, 'MINI ZOOM OUT', True, sm_blinkback, False);
-    BoxUpdate(6, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False)
   end
 end;
@@ -1995,48 +1987,13 @@ begin
     BoxUpdate(1, 1, 91491, 'SLIDE',         True, sm_blinkback, False);
     BoxUpdate(1, 2, 91492, ASt,             True, sm_blinkback, False);
     BoxUpdate(1, 3, 91493, 'ZOOM IN',       True, BtnMode, False);
-    BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 5, 91494, 'ZOOM OUT',      True, BtnMode, False);
-    BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 7, 91495, 'BACK',          True, sm_blinkback, False);
-
-    BoxUpdate(2, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 3, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(2, 4, 91496, 'PITCH UP',      True, BtnMode, False);
-    BoxUpdate(2, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(3, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(4, 1, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 2, 91497, 'YAW LEFT',      True, BtnMode, False);
-    BoxUpdate(4, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 6, 91498, 'YAW RIGHT',     True, BtnMode, False);
-    BoxUpdate(4, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(5, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
-
     BoxUpdate(6, 1, 91499, 'VIEW CHANGE',   True, sm_blinkback, False);
-    BoxUpdate(6, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 3, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(6, 4, 91500, 'PITCH DOWN',    True, BtnMode, False);
-    BoxUpdate(6, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(6, 6, 91501, 'FIRE',          True, sm_blinkback, False);
     BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False)
   end
@@ -2048,54 +2005,9 @@ begin
   AreaPanels.Unselect;
   with FOwner do begin
     ResetAreas;
-    BoxUpdate(1, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 7, 91007, 'BACK',          True, sm_blinkback, False);
-
-    BoxUpdate(2, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 7, 91200, '',              True, sm_blinkback, True);
-
-
-    BoxUpdate(3, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(3, 7, 91581, 'MENU',          True, sm_blinkback, False);
-
-    BoxUpdate(4, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 7, 91591, 'DRIVE',         True, sm_blinkback, False);
-
-    BoxUpdate(5, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(6, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 7, 91200, '',              True, sm_blinkback, True)
   end
 end;
 
@@ -2111,56 +2023,51 @@ begin
     ASt     := 'NO STEP'
   end else ASt := Format('STEP %d', [SubIndex]);
 
+  with FOwner do if VocalAppUsed then begin
+    ResetAreas;
+    BoxUpdate(1, 1, 91596, 'SLIDE',         True, sm_blinkback, False);
+    BoxUpdate(1, 2, 91238, Ast,             True, sm_blinkback, False);
+    BoxUpdate(1, 7, 91550, 'BACK',          True, sm_blinkback, False);
+    BoxUpdate(2, 2, 91234, 'ROLL LEFT',     True, BtnMode, False);
+    BoxUpdate(2, 4, 91230, 'PITCH UP',      True, BtnMode, False);
+    BoxUpdate(2, 6, 91235, 'ROLL RIGHT',    True, BtnMode, False);
+    BoxUpdate(3, 1, 91511, 'NORD WEST',     True, BtnMode, False);
+    BoxUpdate(3, 7, 91512, 'NORD EST',      True, BtnMode, False);
+    BoxUpdate(4, 2, 91232, 'YAW LEFT',      True, BtnMode, False);
+    BoxUpdate(4, 6, 91233, 'YAW RIGHT',     True, BtnMode, False);
+    BoxUpdate(5, 1, 91513, 'SUD WEST',      True, BtnMode, False);
+    BoxUpdate(5, 7, 91514, 'SUD EST',       True, BtnMode, False);
+    BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
+    BoxUpdate(6, 3, 91237, 'SHOOT 2',       True, sm_blinkback, False);
+    BoxUpdate(6, 4, 91231, 'PITCH DOWN',    True, BtnMode, False);
+    BoxUpdate(6, 5, 91236, 'SHOOT 1',       True, sm_blinkback, False);
+    BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False);
+    Exit
+  end;
+
   with FOwner do begin
     ResetAreas;
     BoxUpdate(1, 1, 91596, 'SLIDE',         True, sm_blinkback, False);
     BoxUpdate(1, 2, 91238, Ast,             True, sm_blinkback, False);
-    if MapCalled in [kmc_galaxy, kmc_system] then begin
-      BoxUpdate(1, 3, 91200, '',              True, sm_blinkback, True);
-      BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True);
-      BoxUpdate(1, 5, 91200, '',              True, sm_blinkback, True);
-      BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True);
-    end else begin
+    if not (MapCalled in [kmc_galaxy, kmc_system]) then begin
       BoxUpdate(1, 3, 91293, 'SUPERCRUISE',   True, sm_blinkback, False);
       BoxUpdate(1, 4, 91239, 'FUNC',          True, sm_blinkback, False);
       BoxUpdate(1, 5, 91294, 'FSD',           True, sm_blinkback, False);
       BoxUpdate(1, 6, 91269, '12H TARGET',    True, sm_blinkback, False)
     end;
     BoxUpdate(1, 7, 91550, 'BACK',          True, sm_blinkback, False);
-
     BoxUpdate(2, 1, 91282, 'SPEED LESS',    True, sm_blinkback, False);
     BoxUpdate(2, 2, 91234, 'ROLL LEFT',     True, BtnMode, False);
-    BoxUpdate(2, 3, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(2, 4, 91230, 'PITCH UP',      True, BtnMode, False);
-    BoxUpdate(2, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(2, 6, 91235, 'ROLL RIGHT',    True, BtnMode, False);
     BoxUpdate(2, 7, 91283, 'SPEED MORE',    True, sm_blinkback, False);
-
     BoxUpdate(3, 1, 91284, 'SPEED 25%',     True, sm_blinkback, False);
-    BoxUpdate(3, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(3, 7, 91285, 'SPEED 0%',      True, sm_blinkback, False);
-
     BoxUpdate(4, 1, 91286, 'SPEED 50%',     True, sm_blinkback, False);
     BoxUpdate(4, 2, 91232, 'YAW LEFT',      True, BtnMode, False);
-    BoxUpdate(4, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 4, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 6, 91233, 'YAW RIGHT',     True, BtnMode, False);
-    BoxUpdate(4, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 7, 91287, 'SPEED 100%',    True, sm_blinkback, False);
-
     BoxUpdate(5, 1, 91288, 'SPEED 75%',     True, sm_blinkback, False);
-    BoxUpdate(5, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
-//    BoxUpdate(5, 7, 91289, 'INV SPEED',     True, sm_blinkback, False);
-
     BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
     BoxUpdate(6, 2, 91290, 'BOOST',         True, sm_blinkback, False);
     BoxUpdate(6, 3, 91237, 'SHOOT 2',       True, sm_blinkback, False);
@@ -2173,49 +2080,46 @@ end;
 
 procedure TEliteContext.Context_EliteDriveCombat;
 begin
+  IndexMode := 0;
+  with FOwner do if VocalAppUsed then begin
+    ResetAreas;
+    BoxUpdate(2, 2, 91234, 'ROLL LEFT',     True, sm_directnotnull, False);
+    BoxUpdate(2, 4, 91230, 'PITCH UP',      True, sm_directnotnull, False);
+    BoxUpdate(2, 6, 91235, 'ROLL RIGHT',    True, sm_directnotnull, False);
+    BoxUpdate(3, 1, 91511, 'NORD WEST',     True, sm_directnotnull, False);
+    BoxUpdate(3, 7, 91512, 'NORD EST',      True, sm_directnotnull, False);
+    BoxUpdate(4, 2, 91232, 'YAW LEFT',      True, sm_directnotnull, False);
+    BoxUpdate(4, 6, 91233, 'YAW RIGHT',     True, sm_directnotnull, False);
+    BoxUpdate(5, 1, 91513, 'SUD WEST',      True, sm_directnotnull, False);
+    BoxUpdate(5, 7, 91514, 'SUD EST',       True, sm_directnotnull, False);
+    BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
+    BoxUpdate(6, 3, 91237, 'SHOOT 2',       True, sm_blinkback, False);
+    BoxUpdate(6, 4, 91231, 'PITCH DOWN',    True, sm_directnotnull, False);
+    BoxUpdate(6, 5, 91236, 'SHOOT 1',       True, sm_blinkback, False);
+    BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False);
+    Exit
+  end;
+
   with FOwner do begin
     ResetAreas;
     BoxUpdate(1, 1, 91234, 'ROLL LEFT',     True, sm_directnotnull, False);
-    BoxUpdate(1, 2, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 3, 91290, 'BOOST',         True, sm_blinkback, False);
     BoxUpdate(1, 4, 91239, 'FUNC',          True, sm_blinkback, False);
     BoxUpdate(1, 5, 91291, 'FLIGHT ASSIST', True, sm_blinkback, False);
     BoxUpdate(1, 6, 91269, '12H TARGET',    True, sm_blinkback, False);
     BoxUpdate(1, 7, 91235, 'ROLL RIGHT',    True, sm_directnotnull, False);
-
     BoxUpdate(2, 1, 91268, 'HIGEST THREAT', True, sm_blinkback, False);
     BoxUpdate(2, 2, 91511, 'NORD WEST',     True, sm_directnotnull, False);
-    BoxUpdate(2, 3, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(2, 4, 91230, 'PITCH UP',      True, sm_directnotnull, False);
-    BoxUpdate(2, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(2, 6, 91512, 'NORD EST',      True, sm_directnotnull, False);
     BoxUpdate(2, 7, 91267, 'NEXT HOSTILE',  True, sm_blinkback, False);
-
     BoxUpdate(3, 1, 91284, 'SPEED 25%',     True, sm_blinkback, False);
-    BoxUpdate(3, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(3, 7, 91285, 'SPEED 0%',      True, sm_blinkback, False);
-
     BoxUpdate(4, 1, 91286, 'SPEED 50%',     True, sm_blinkback, False);
     BoxUpdate(4, 2, 91232, 'YAW LEFT',      True, sm_directnotnull, False);
-    BoxUpdate(4, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 4, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 6, 91233, 'YAW RIGHT',     True, sm_directnotnull, False);
-    BoxUpdate(4, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 7, 91287, 'SPEED 100%',    True, sm_blinkback, False);
-
     BoxUpdate(5, 1, 91288, 'SPEED 75%',     True, sm_blinkback, False);
-    BoxUpdate(5, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
-//    BoxUpdate(5, 7, 91289, 'INV SPEED',     True, sm_blinkback, False);
-
     BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
     BoxUpdate(6, 2, 91513, 'SUD WEST',      True, sm_directnotnull, False);
     BoxUpdate(6, 3, 91237, 'SHOOT 2',       True, sm_blinkback, False);
@@ -2239,6 +2143,29 @@ begin
     ASt     := 'NO STEP'
   end else ASt := Format('STEP %d', [SubLandingDriveIndex]);
   ASt1 := Format('PITCH %d', [IndexOfPitchLanding + 1]);
+
+  with FOwner do if VocalAppUsed then begin
+    ResetAreas;
+    BoxUpdate(1, 1, 91522, 'SLIDE',           True, sm_blinkback, False);
+    BoxUpdate(1, 2, 91523, ASt,               True, sm_blinkback, False);
+    BoxUpdate(1, 3, 91524, ASt1,              True, sm_blinkback, False);
+    BoxUpdate(1, 5, 91525, 'PITCH UP',        True, sm_blinkback, False);
+    BoxUpdate(2, 1, 91526, 'ROLL LEFT',       True, sm_blinkback, False);
+    BoxUpdate(2, 2, 91527, 'BACKWARD THRUST', True, BtnMode, False);
+    BoxUpdate(2, 4, 91528, 'UP THRUST',       True, BtnMode, False);
+    BoxUpdate(2, 6, 91529, 'FORWARD THRUST',  True, BtnMode, False);
+    BoxUpdate(2, 7, 91530, 'ROLL RIGHT',      True, sm_blinkback, False);
+    BoxUpdate(4, 1, 91531, 'YAW LEFT',        True, sm_blinkback, False);
+    BoxUpdate(4, 2, 91532, 'LEFT THRUST',     True, BtnMode, False);
+    BoxUpdate(4, 6, 91533, 'RIGHT THRUST',    True, BtnMode, False);
+    BoxUpdate(4, 7, 91534, 'YAW RIGHT',       True, sm_blinkback, False);
+    BoxUpdate(6, 1, 91570, 'SWITCH',          True, sm_blinkback, False);
+    BoxUpdate(6, 4, 91535, 'DOWN THRUST',     True, BtnMode, False);
+    BoxUpdate(6, 5, 91536, 'PITCH DOWN',      True, sm_blinkback, False);
+    BoxUpdate(6, 7, 91599, 'PAUSE',           True, sm_blinkback, False);
+    Exit
+  end;
+
   with FOwner do begin
     ResetAreas;
     BoxUpdate(1, 1, 91522, 'SLIDE',           True, sm_blinkback, False);
@@ -2246,47 +2173,21 @@ begin
     BoxUpdate(1, 3, 91524, ASt1,              True, sm_blinkback, False);
     BoxUpdate(1, 4, 91239, 'FUNC',            True, sm_blinkback, False);
     BoxUpdate(1, 5, 91525, 'PITCH UP',        True, sm_blinkback, False);
-    BoxUpdate(1, 6, 91200, '',                True, sm_blinkback, True);
     BoxUpdate(1, 7, 91285, 'SPEED 0%',        True, sm_blinkback, False);
-
     BoxUpdate(2, 1, 91526, 'ROLL LEFT',       True, sm_blinkback, False);
     BoxUpdate(2, 2, 91527, 'BACKWARD THRUST', True, BtnMode, False);
-    BoxUpdate(2, 3, 91200, '',                True, sm_blinkback, True);
     BoxUpdate(2, 4, 91528, 'UP THRUST',       True, BtnMode, False);
-    BoxUpdate(2, 5, 91200, '',                True, sm_blinkback, True);
     BoxUpdate(2, 6, 91529, 'FORWARD THRUST',  True, BtnMode, False);
     BoxUpdate(2, 7, 91530, 'ROLL RIGHT',      True, sm_blinkback, False);
-
     BoxUpdate(3, 1, 91282, 'SPEED LESS',      True, sm_blinkback, False);
-    BoxUpdate(3, 2, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(3, 3, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(3, 4, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(3, 5, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(3, 6, 91200, '',                True, sm_blinkback, True);
     BoxUpdate(3, 7, 91283, 'SPEED MORE',      True, sm_blinkback, False);
-
     BoxUpdate(4, 1, 91531, 'YAW LEFT',        True, sm_blinkback, False);
     BoxUpdate(4, 2, 91532, 'LEFT THRUST',     True, BtnMode, False);
-    BoxUpdate(4, 3, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(4, 4, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(4, 5, 91200, '',                True, sm_blinkback, True);
     BoxUpdate(4, 6, 91533, 'RIGHT THRUST',    True, BtnMode, False);
     BoxUpdate(4, 7, 91534, 'YAW RIGHT',       True, sm_blinkback, False);
-
-    BoxUpdate(5, 1, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(5, 2, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(5, 3, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(5, 4, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(5, 5, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(5, 6, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91200, '',                True, sm_blinkback, True);
-
     BoxUpdate(6, 1, 91570, 'SWITCH',          True, sm_blinkback, False);
-    BoxUpdate(6, 2, 91200, '',                True, sm_blinkback, True);
-    BoxUpdate(6, 3, 91200, '',                True, sm_blinkback, True);
     BoxUpdate(6, 4, 91535, 'DOWN THRUST',     True, BtnMode, False);
     BoxUpdate(6, 5, 91536, 'PITCH DOWN',      True, sm_blinkback, False);
-    BoxUpdate(6, 6, 91200, '',                True, sm_blinkback, True);
     BoxUpdate(6, 7, 91599, 'PAUSE',           True, sm_blinkback, False)
   end
 end;
@@ -2294,61 +2195,40 @@ end;
 procedure TEliteContext.Context_EliteMenu;
 begin
   AreaPanels.Unselect;
+  with FOwner do if VocalAppUsed then begin
+    ResetAreas;
+    { --- TODO Show Keybord with context }
+    if (MapCalled = kmc_galaxy) or ComPanelOpened
+      then BoxUpdate(1, 5, 91560, 'KEYBOARD',      True, sm_blinkback, False);
+    BoxUpdate(1, 7, 91550, 'BACK',          True, sm_blinkback, False);
+    if not IsDocked or (MapCalled in [kmc_galaxy, kmc_system])
+      then BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
+    BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False);
+    Exit;
+  end;
+
   with FOwner do begin
     ResetAreas;
     BoxUpdate(1, 1, 91209, 'STEP',          True, sm_blinkback, False);
-    BoxUpdate(1, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 3, 91200, '',              True, sm_blinkback, True);
-    if MapCalled in [kmc_galaxy, kmc_system]
-      then BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True)
-      else BoxUpdate(1, 4, 91239, 'FUNC',          True, sm_blinkback, False);
-    { --- TODO Show Keybord with context }
+    if not (MapCalled in [kmc_galaxy, kmc_system])
+      then BoxUpdate(1, 4, 91239, 'FUNC',          True, sm_blinkback, False);
     if (MapCalled = kmc_galaxy) or ComPanelOpened
-      then BoxUpdate(1, 5, 91560, 'KEYBOARD',      True, sm_blinkback, False)
-      else BoxUpdate(1, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True);
+      then BoxUpdate(1, 5, 91560, 'KEYBOARD',      True, sm_blinkback, False);
     BoxUpdate(1, 7, 91550, 'BACK',          True, sm_blinkback, False);
-
-    BoxUpdate(2, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 2, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(2, 3, 91205, 'PREV',          True, sm_blinkback, False);
     BoxUpdate(2, 4, 91201, 'TOP',           True, sm_blinkback, False);
     BoxUpdate(2, 5, 91206, 'NEXT',          True, sm_blinkback, False);
-    BoxUpdate(2, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 7, 91200, '',              True, sm_blinkback, True);
-
     BoxUpdate(3, 1, 91225, 'STEP 1',        True, sm_blinkback, False);
-    BoxUpdate(3, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(3, 7, 91227, 'STEP 5',       True, sm_blinkback, False);
-
     BoxUpdate(4, 1, 91226, 'STEP 3',        True, sm_blinkback, False);
     BoxUpdate(4, 2, 91203, 'LEFT',          True, sm_blinkback, False);
-    BoxUpdate(4, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 6, 91204, 'RIGHT',         True, sm_blinkback, False);
     BoxUpdate(4, 7, 91228, 'STEP 10',       True, sm_blinkback, False);
-
-    BoxUpdate(5, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
-
     if not IsDocked or (MapCalled in [kmc_galaxy, kmc_system])
-      then BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False)
-      else BoxUpdate(6, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 2, 91200, '',              True, sm_blinkback, True);
+      then BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
     BoxUpdate(6, 3, 91207, 'ESC',           True, sm_blinkback, False);
     BoxUpdate(6, 4, 91202, 'BOTTOM',        True, sm_blinkback, False);
     BoxUpdate(6, 5, 91208, 'ENTER',         True, sm_blinkback, False);
-    BoxUpdate(6, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False)
   end
 end;
@@ -2361,64 +2241,13 @@ begin
     BoxUpdate(1, 1, 91240, 'PANELS',        True, sm_blinkback, False);
     if not IsDocked then begin
       BoxUpdate(1, 2, 91250, 'DIV',           True, sm_blinkback, False);
-      if InSrv then begin
-        BoxUpdate(1, 3, 91200, '',              True, sm_blinkback, True);
-        BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True)
-      end else begin
+      if not InSrv then begin
         BoxUpdate(1, 3, 91260, 'WEAPONS',       True, sm_blinkback, False);
-        BoxUpdate(1, 4, 91300, 'FIGHTER',       True, sm_blinkback, False)
+        BoxUpdate(1, 4, 91300, 'FIGHTER',       True, sm_blinkback, False);
+        BoxUpdate(1, 5, 91350, 'CAMERA',        True, sm_blinkback, False)
       end;
-      BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True)
-    end else begin
-      BoxUpdate(1, 2, 91200, '',              True, sm_blinkback, True);
-      BoxUpdate(1, 3, 91200, '',              True, sm_blinkback, True);
-      BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True);
-      BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True)
     end;
-    if InSrv
-      then BoxUpdate(1, 5, 91200, '',              True, sm_blinkback, True)
-      else BoxUpdate(1, 5, 91350, 'CAMERA',        True, sm_blinkback, False);
     BoxUpdate(1, 7, 91571, 'BACK',          True, sm_blinkback, False);
-
-    BoxUpdate(2, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(3, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(4, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(5, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(6, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 7, 91200, '',              True, sm_blinkback, True)
   end
 end;
 
@@ -2428,10 +2257,8 @@ begin
     BoxUpdate(2, 1, 91248, 'SYSTEM MAP',    True, sm_blinkback, False);
     BoxUpdate(2, 4, 91241, 'COM PANEL',     True, sm_blinkback, False);
     BoxUpdate(2, 7, 91249, 'GALAXY MAP',    True, sm_blinkback, False);
-
     BoxUpdate(4, 1, 91242, 'LEFT PANEL',    True, sm_blinkback, False);
     BoxUpdate(4, 7, 91243, 'RIGHT PANEL',   True, sm_blinkback, False);
-
     BoxUpdate(6, 1, 91246, 'FRIENDS MENU',  True, sm_blinkback, False);
     BoxUpdate(6, 4, 91244, 'BOTTOM PANEL',  True, sm_blinkback, False);
     BoxUpdate(6, 7, 91247, 'BACK TO MENU',  True, sm_blinkback, False)
@@ -2442,49 +2269,37 @@ procedure TEliteContext.Context_Func1;
 begin
   with FOwner, FEliteStatus do
     if InSrv then begin
-
       BoxUpdate(2, 3, 91252, 'CARGO SCOOP',         True, sm_blinkback, False);
       BoxUpdate(2, 5, 91403, 'SHIP Recall/Dismiss', True, sm_blinkback, False);
-
       BoxUpdate(3, 7, 91266, 'PREV HOSTILE',        True, sm_blinkback, False);
-
       BoxUpdate(4, 4, 91256, 'PIPE ENGINES',        True, sm_blinkback, False);
       BoxUpdate(4, 7, 91267, 'NEXT HOSTILE',        True, sm_blinkback, False);
-
       BoxUpdate(5, 3, 91257, 'PIPE SYSTEMS',        True, sm_blinkback, False);
       BoxUpdate(5, 4, 91259, 'DEFAULT',             True, sm_blinkback, False);
       BoxUpdate(5, 5, 91258, 'PIPE WEAPONS',        True, sm_blinkback, False);
       BoxUpdate(5, 7, 91268, 'HIGEST THREAT',       True, sm_blinkback, False);
-
       BoxUpdate(6, 3, 91273, 'FULL SYSTEMS',        True, sm_blinkback, False);
       BoxUpdate(6, 4, 91274, 'FULL ENGINES',        True, sm_blinkback, False);
       BoxUpdate(6, 5, 91275, 'FULL WEAPONS',        True, sm_blinkback, False);
-
     end else begin
-
       BoxUpdate(2, 2, 91251, 'LANDING GEAR',        True, sm_blinkback, False);
       BoxUpdate(2, 3, 91252, 'CARGO SCOOP',         True, sm_blinkback, False);
       BoxUpdate(2, 4, 91253, 'NIGHT VISION',        True, sm_blinkback, False);
       BoxUpdate(2, 5, 91254, 'SPOTLIGHT',           True, sm_blinkback, False);
       BoxUpdate(2, 6, 91255, 'COCKPIT MODE',        True, sm_blinkback, False);
       BoxUpdate(2, 7, 91277, 'S.A.A',               True, sm_blinkback, False);
-
       BoxUpdate(3, 1, 91281, 'CHARGE ECM',          True, sm_blinkback, False);
-
       BoxUpdate(4, 1, 91279, 'SHIELD CELL',         True, sm_blinkback,  False);
       BoxUpdate(4, 4, 91538, 'UP THRUST',           True, sm_directnotnull, False);
       BoxUpdate(4, 7, 91295, 'PREV SHIP',           True, sm_blinkback, False);
-
       BoxUpdate(5, 1, 91280, 'HEAT SINK',           True, sm_blinkback, False);
       BoxUpdate(5, 3, 91542, 'LEFT THRUST',         True, sm_directnotnull, False);
       BoxUpdate(5, 5, 91543, 'RIGHT THRUST',        True, sm_directnotnull, False);
       BoxUpdate(5, 7, 91296, 'NEXT SHIP',           True, sm_blinkback, False);
-
       BoxUpdate(6, 1, 91278, 'CHAFF LAUNCHER',      True, sm_blinkback, False);
       BoxUpdate(6, 3, 91537, 'BACKWARD THRUST',     True, sm_directnotnull, False);
       BoxUpdate(6, 4, 91545, 'DOWN THRUST',         True, sm_directnotnull, False);
       BoxUpdate(6, 5, 91539, 'FORWARD THRUST',      True, sm_directnotnull, False);
-
     end
 end;
 
@@ -2497,20 +2312,16 @@ begin
     BoxUpdate(2, 4, 91263, 'NEXT GROUP',       True, sm_blinkback, False);
     BoxUpdate(2, 6, 91264, 'PREV SUBSYSTEM',   True, sm_blinkback, False);
     BoxUpdate(2, 7, 91265, 'NEXT SUBSYSTEM',   True, sm_blinkback, False);
-
     BoxUpdate(3, 1, 91306, 'FOCUS TARGET',     True, sm_blinkback, False);
     BoxUpdate(3, 7, 91266, 'PREV HOSTILE',     True, sm_blinkback, False);
-
     BoxUpdate(4, 1, 91270, 'TARGET WINGMAN 1', True, sm_blinkback, False);
     BoxUpdate(4, 4, 91256, 'PIPE ENGINES',     True, sm_blinkback, False);
     BoxUpdate(4, 7, 91267, 'NEXT HOSTILE',     True, sm_blinkback, False);
-
     BoxUpdate(5, 1, 91271, 'TARGET WINGMAN 2', True, sm_blinkback, False);
     BoxUpdate(5, 3, 91257, 'PIPE SYSTEMS',     True, sm_blinkback, False);
     BoxUpdate(5, 4, 91259, 'DEFAULT',          True, sm_blinkback, False);
     BoxUpdate(5, 5, 91258, 'PIPE WEAPONS',     True, sm_blinkback, False);
     BoxUpdate(5, 7, 91268, 'HIGEST THREAT',    True, sm_blinkback, False);
-
     BoxUpdate(6, 1, 91272, 'TARGET WINGMAN 3', True, sm_blinkback, False);
     BoxUpdate(6, 3, 91273, 'FULL SYSTEMS',     True, sm_blinkback, False);
     BoxUpdate(6, 4, 91274, 'FULL ENGINES',     True, sm_blinkback, False);
@@ -2540,21 +2351,15 @@ begin
     BoxUpdate(2, 1, 91351, 'OPEN/CLOSE',       True, sm_blinkback, False);
     BoxUpdate(2, 3, 91352, 'PREV CAM',         True, sm_blinkback, False);
     BoxUpdate(2, 5, 91353, 'NEXT CAM',         True, sm_blinkback, False);
-
-
     BoxUpdate(3, 3, 91355, 'CAM 1',            True, sm_blinkback, False);
     BoxUpdate(3, 5, 91356, 'CAM 2',            True, sm_blinkback, False);
-
+    BoxUpdate(4, 1, 91363, 'ATH',              True, sm_blinkback, False);
     BoxUpdate(4, 3, 91357, 'CAM 3',            True, sm_blinkback, False);
     BoxUpdate(4, 5, 91358, 'CAM 4',            True, sm_blinkback, False);
-
     BoxUpdate(5, 3, 91359, 'CAM 5',            True, sm_blinkback, False);
     BoxUpdate(5, 5, 91360, 'CAM 6',            True, sm_blinkback, False);
-
     BoxUpdate(6, 3, 91361, 'CAM 7',            True, sm_blinkback, False);
     BoxUpdate(6, 5, 91362, 'CAM 8',            True, sm_blinkback, False);
-
-    BoxUpdate(4, 1, 91363, 'ATH',              True, sm_blinkback, False)
   end
 end;
 
@@ -2569,39 +2374,46 @@ begin
     BtnMode := sm_directnotnull;
     ASt     := 'NO STEP'
   end else ASt := Format('STEP %d', [SubVRSIndex]);
+
+  with FOwner, FEliteStatus do if VocalAppUsed then begin
+    ResetAreas;
+    BoxUpdate(1, 1, 91404, 'SLIDE',               True, sm_blinkback, False);
+    BoxUpdate(1, 2, 91405, ASt,                   True, sm_blinkback, False);
+    BoxUpdate(1, 7, 91550, 'BACK',                True, sm_blinkback, False);
+    BoxUpdate(2, 4, 91406, 'UP VIEW',             True, BtnMode, False);
+    BoxUpdate(4, 2, 91408, 'STEER LEFT',          True, BtnMode, False);
+    BoxUpdate(4, 6, 91409, 'STEER RIGHT',         True, BtnMode, False);
+    BoxUpdate(6, 1, 91570, 'SWITCH',              True, sm_blinkback, False);
+    if SrvTurretView
+      then BoxUpdate(6, 3, 91414, 'SCAN',         True, sm_blinkback, False);
+    BoxUpdate(6, 4, 91407, 'DOWN VIEW',           True, BtnMode, False);
+    BoxUpdate(6, 5, 91413, 'SHOOT 1',             True, sm_blinkback, False);
+    BoxUpdate(6, 7, 91599, 'PAUSE',               True, sm_blinkback, False);
+    Exit
+  end;
+
   with FOwner, FEliteStatus do begin
     ResetAreas;
     BoxUpdate(1, 1, 91404, 'SLIDE',               True, sm_blinkback, False);
     BoxUpdate(1, 2, 91405, ASt,                   True, sm_blinkback, False);
     BoxUpdate(1, 3, 91402, 'TURRET MODE',         True, sm_blinkback, False);
     BoxUpdate(1, 4, 91239, 'FUNC',                True, sm_blinkback, False);
-
     BoxUpdate(1, 6, 91269, '12H TARGET',          True, sm_blinkback, False);
     BoxUpdate(1, 7, 91550, 'BACK',                True, sm_blinkback, False);
-
     BoxUpdate(2, 4, 91406, 'UP VIEW',             True, BtnMode, False);
-
     BoxUpdate(3, 1, 91282, 'LESS SPEED',          True, sm_blinkback, False);
     BoxUpdate(3, 7, 91283, 'MORE SPEED',          True, sm_blinkback, False);
-
     BoxUpdate(4, 2, 91408, 'STEER LEFT',          True, BtnMode, False);
     BoxUpdate(4, 6, 91409, 'STEER RIGHT',         True, BtnMode, False);
-
     BoxUpdate(5, 1, 91401, 'AUTO BRAK',           True, sm_blinkback, False);
-    BoxUpdate(5, 7, 91200, '',                    True, sm_blinkback, True);
-//    BoxUpdate(5, 7, 91411, 'INV SPEED',           True, sm_blinkback, False);
-
     BoxUpdate(6, 1, 91570, 'SWITCH',              True, sm_blinkback, False);
     BoxUpdate(6, 2, 91410, 'VERTICAL THRUST',     True, sm_blinkback, False);
     if SrvTurretView
-      then BoxUpdate(6, 3, 91414, 'SCAN',         True, sm_blinkback, False)
-      else BoxUpdate(6, 3, 91200, '',             True, sm_blinkback, True);
-
-
+      then BoxUpdate(6, 3, 91414, 'SCAN',         True, sm_blinkback, False);
     BoxUpdate(6, 4, 91407, 'DOWN VIEW',           True, BtnMode, False);
     BoxUpdate(6, 5, 91413, 'SHOOT 1',             True, sm_blinkback, False);
     BoxUpdate(6, 6, 91412, 'DRIVE ASSIST',        True, sm_blinkback, False);
-    BoxUpdate(6, 7, 91599, 'PAUSE',               True, sm_blinkback, False);
+    BoxUpdate(6, 7, 91599, 'PAUSE',               True, sm_blinkback, False)
   end
 end;
 
@@ -2631,49 +2443,24 @@ begin
     BoxUpdate(1, 1, 91422, 'SLIDE',         True, sm_blinkback, False);
     BoxUpdate(1, 2, 91423, ASt,             True, sm_blinkback, False);
     BoxUpdate(1, 3, 91434, 'ZOOM IN',       True, BtnMode1, False);
-    BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 5, 91438, 'ZOOM OUT',      True, BtnMode1, False);
     BoxUpdate(1, 6, 91425, 'GO HOME',       True, sm_blinkback, False);
-    BoxUpdate(1, 7, 91421, 'BACK',          True, sm_blinkback, False);
-
+    if not VocalAppUsed then
+      BoxUpdate(1, 7, 91421, 'BACK',          True, sm_blinkback, False);
     BoxUpdate(2, 1, 91426, ASt1,            True, sm_blinkback, False);
-    BoxUpdate(2, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 3, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(2, 4, 91427, 'REWARD',        True, BtnMode, False);
-    BoxUpdate(2, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(3, 1, 91429, 'UP ROTATE',     True, BtnMode1, False);
+    BoxUpdate(3, 1, 91433, 'UP ROTATE',     True, BtnMode1, False);
     BoxUpdate(3, 2, 91428, 'UP',            True, BtnMode1, False);
-    BoxUpdate(3, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(4, 1, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 2, 91430, 'LEFT',          True, BtnMode, False);
-    BoxUpdate(4, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 6, 91431, 'RIGHT',         True, BtnMode, False);
-    BoxUpdate(4, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(5, 1, 91433, 'DOWN ROTATE',   True, BtnMode1, False);
+    BoxUpdate(5, 1, 91429, 'DOWN ROTATE',   True, BtnMode1, False);
     BoxUpdate(5, 2, 91432, 'DOWN',          True, BtnMode1, False);
-    BoxUpdate(5, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback , False);
-    BoxUpdate(6, 2, 91200, '',              True, sm_blinkback, True);
+    if not VocalAppUsed
+      then BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False)
+      else BoxUpdate(6, 1, 91560, 'KEYBOARD',      True, sm_blinkback, False);
     BoxUpdate(6, 3, 91435, 'LEFT ROTATE',   True, BtnMode1, False);
     BoxUpdate(6, 4, 91436, 'FORWARD',       True, BtnMode, False);
     BoxUpdate(6, 5, 91437, 'RIGHT ROTATE',  True, BtnMode1, False);
-    BoxUpdate(6, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False)
   end
 end;
@@ -2683,52 +2470,6 @@ begin
   AreaPanels.Unselect;
   with FOwner do begin
     ResetAreas;
-    BoxUpdate(1, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(2, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(3, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(4, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(5, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(6, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(6, 7, 91598, 'BACK',          True, sm_blinkback, False)
   end
 end;
@@ -2738,53 +2479,22 @@ begin
   AreaPanels.Unselect;
   with FOwner do begin
     ResetAreas;
-    BoxUpdate(1, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 7, 91580, 'BACK',          True, sm_blinkback, False);
-
-    BoxUpdate(2, 1, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(2, 2, 91210, '1',             True, sm_blinkback, False);
     BoxUpdate(2, 3, 91211, '2',             True, sm_blinkback, False);
     BoxUpdate(2, 4, 91212, '3',             True, sm_blinkback, False);
     BoxUpdate(2, 5, 91213, '4',             True, sm_blinkback, False);
     BoxUpdate(2, 6, 91214, '5',             True, sm_blinkback, False);
-    BoxUpdate(2, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(3, 1, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(3, 2, 91215, '10',            True, sm_blinkback, False);
     BoxUpdate(3, 3, 91216, '15',            True, sm_blinkback, False);
     BoxUpdate(3, 4, 91217, '20',            True, sm_blinkback, False);
     BoxUpdate(3, 5, 91218, '30',            True, sm_blinkback, False);
     BoxUpdate(3, 6, 91219, '50',            True, sm_blinkback, False);
-    BoxUpdate(3, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(4, 1, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 2, 91220, '100',           True, sm_blinkback, False);
     BoxUpdate(4, 3, 91221, '150',           True, sm_blinkback, False);
     BoxUpdate(4, 4, 91222, '200 ',          True, sm_blinkback, False);
     BoxUpdate(4, 5, 91223, '300',           True, sm_blinkback, False);
     BoxUpdate(4, 6, 91224, '500',           True, sm_blinkback, False);
-    BoxUpdate(4, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(5, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(6, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 7, 91200, '',              True, sm_blinkback, True)
   end
 end;
 
@@ -2805,49 +2515,15 @@ begin
     BoxUpdate(1, 1, 91462, 'SLIDE',         True, sm_blinkback, False);
     BoxUpdate(1, 2, 91451, ASt,             True, sm_blinkback, False);
     BoxUpdate(1, 3, 91460, 'ZOOM IN',       True, BtnMode, False);
-    BoxUpdate(1, 4, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(1, 5, 91461, 'ZOOM OUT',      True, BtnMode, False);
-    BoxUpdate(1, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(1, 7, 91453, 'BACK',          True, sm_blinkback, False);
-
-    BoxUpdate(2, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 3, 91200, '',              True, sm_blinkback, True);
+    if not VocalAppUsed then
+      BoxUpdate(1, 7, 91453, 'BACK',          True, sm_blinkback, False);
     BoxUpdate(2, 4, 91456, 'GO UP',         True, BtnMode, False);
-    BoxUpdate(2, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(2, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(3, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(3, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(4, 1, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 2, 91458, 'GO LEFT',       True, BtnMode, False);
-    BoxUpdate(4, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(4, 5, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(4, 6, 91459, 'GO RIGHT',      True, BtnMode, False);
-    BoxUpdate(4, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(5, 1, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 3, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 4, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 6, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(5, 7, 91200, '',              True, sm_blinkback, True);
-
-    BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
-    BoxUpdate(6, 2, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 3, 91200, '',              True, sm_blinkback, True);
+    if not VocalAppUsed then
+      BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
     BoxUpdate(6, 4, 91457, 'GO DOWN',       True, BtnMode, False);
-    BoxUpdate(6, 5, 91200, '',              True, sm_blinkback, True);
-    BoxUpdate(6, 6, 91200, '',              True, sm_blinkback, True);
     BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False)
   end
 end;
@@ -2870,6 +2546,9 @@ begin
   IsDSDOpened           := False;
   IsFSSOpened           := False;
   FSwitchUpdate         := False;
+  VocalAppUsed          := False; { --- TODO auto detect Raoul Fumier or other vocal app }
+  FEliteAssistUsed      := False;
+  FEliteAssistStarted   := False;
 end;
 
 procedure TEliteContext.DoACSAnalyse;
@@ -2951,20 +2630,23 @@ end;
 
 procedure TEliteContext.DoACSSlide;
 begin
-  IndexACSMode := 0;
+  if IndexACSMode <> 0 then begin
+    IndexACSMode := 0;
+    FOwner.FContext.FunctionSound
+  end;
   ACS_display(IsFSSOpened);
-  FOwner.FContext.FunctionSound;
 end;
 
 procedure TEliteContext.DoACSSteps;
 begin
-  if IndexACSMode = 0 then IndexACSMode := SubACSIndex
-  else begin
+  if IndexACSMode = 0 then begin
+    IndexACSMode := SubACSIndex;
+    FOwner.FContext.FunctionSound
+  end else begin
     IndexACSMode := (IndexACSMode + 1) mod 4;
     if IndexACSMode = 0 then IndexACSMode := 1;
     SubACSIndex := IndexACSMode;
   end;
-  FOwner.FContext.FunctionSound;
   ACS_display(IsFSSOpened)
 end;
 
@@ -3054,7 +2736,7 @@ begin
   { --- Get display before FUNC }
   ComPanelOpened := True;
   Menu_display;
-  with FOwner, FContext do if not DisplayPanel then FunctionSound
+  with FOwner, FContext do if not DisplayPanel and not isPause then FunctionSound
 end;
 
 procedure TEliteContext.DoVRSDriveAssist;
@@ -3119,20 +2801,23 @@ end;
 
 procedure TEliteContext.DoDriveLandingSlide;
 begin
-  IndexLandingDrive := 0;
-  FOwner.FContext.FunctionSound;
+  if IndexLandingDrive <> 0 then begin
+    IndexLandingDrive := 0;
+    FOwner.FContext.FunctionSound
+  end;
   Drive_display
 end;
 
 procedure TEliteContext.DoDriveLandingStep;
 begin
-  if IndexLandingDrive = 0 then IndexLandingDrive := SubLandingDriveIndex
-  else begin
+  if IndexLandingDrive = 0 then begin
+    IndexLandingDrive := SubLandingDriveIndex;
+    FOwner.FContext.FunctionSound
+  end else begin
     IndexLandingDrive := (IndexLandingDrive + 1) mod 4;
     if IndexLandingDrive = 0 then IndexLandingDrive := 1;
     SubLandingDriveIndex := IndexLandingDrive
   end;
-  FOwner.FContext.FunctionSound;
   Drive_display
 end;
 
@@ -3178,20 +2863,23 @@ end;
 
 procedure TEliteContext.DoDSDSlide;
 begin
-  IndexDSDMode := 0;
+  if IndexDSDMode <> 0 then begin
+    IndexDSDMode := 0;
+    FOwner.FContext.FunctionSound
+  end;
   DSD_display( IsDSDOpened );
-  FOwner.FContext.FunctionSound;
 end;
 
 procedure TEliteContext.DoDSDSteps;
 begin
-  if IndexDSDMode = 0 then IndexDSDMode := SubDSDIndex
-  else begin
+  if IndexDSDMode = 0 then begin
+    IndexDSDMode := SubDSDIndex;
+    FOwner.FContext.FunctionSound
+  end else begin
     IndexDSDMode := (IndexDSDMode + 1) mod 4;
     if IndexDSDMode = 0 then IndexDSDMode := 1;
     SubDSDIndex := IndexDSDMode
   end;
-  FOwner.FContext.FunctionSound;
   DSD_display( IsDSDOpened )
 end;
 
@@ -3303,19 +2991,23 @@ end;
 
 procedure TEliteContext.DoGMSlide;
 begin
-  IndexGMMode := 0;
+  if IndexGMMode <> 0 then begin
+    IndexGMMode := 0;
+    FOwner.FContext.FunctionSound
+  end;
   GalaxyMap_display
 end;
 
 procedure TEliteContext.DoGMSteps;
 begin
-  if IndexGMMode = 0 then IndexGMMode := SubGMIndex
-  else begin
+  if IndexGMMode = 0 then begin
+    IndexGMMode := SubGMIndex;
+    FOwner.FContext.FunctionSound
+  end else begin
     IndexGMMode := (IndexGMMode + 1) mod 4;
     if IndexGMMode = 0 then IndexGMMode := 1;
     SubGMIndex := IndexGMMode
   end;
-  FOwner.FContext.FunctionSound;
   GalaxyMap_display
 end;
 
@@ -3346,7 +3038,7 @@ end;
 procedure TEliteContext.DoKeyBoardShow;
 begin
   with FOwner, FEliteStatus do
-    case TGuiType(GuiFOcus) of
+    case GuiValue of
       gt_galaxymap,
       gt_commspanel : begin
         DisplayBeforeKeyboard := CurrentDisplay;
@@ -3376,16 +3068,16 @@ begin
   with FOwner, FEliteManager do if DisplayPanel then DoClicUnique(LeftPanel);
   PanelCalled := kp_left;
   Menu_display;
-  with FOwner, FContext do if not DisplayPanel then FunctionSound
+  with FOwner, FContext do if not DisplayPanel and not isPause then FunctionSound
 end;
 
 procedure TEliteContext.DoMapGalaxyShow(DisplayMap: boolean);
 begin
-  with FOwner, FEliteManager, FContext do begin
+  with FOwner, FEliteManager, FContext do if MapCalled <> kmc_galaxy then begin
     MapCalled := kmc_galaxy;
     if DisplayMap then MapGalaxy;
-    Menu_display;
-    FunctionSound
+    if VocalAppUsed then GalaxyMap_display else Menu_display;
+    if  not isPause then FunctionSound
   end
 end;
 
@@ -3394,8 +3086,8 @@ begin
   with FOwner, FEliteManager, FContext do begin
     MapCalled := kmc_system;
     if DisplayMap then MapSystem;
-    Menu_display;
-    FunctionSound
+    if VocalAppUsed then SystemMap_display else Menu_display;
+    if  not isPause then FunctionSound
   end
 end;
 
@@ -3448,12 +3140,12 @@ begin
   end
 end;
 
-procedure TEliteContext.DoNavBack;
+procedure TEliteContext.DoNavBack(EliteMapClose: Boolean);
 
   function BackIfGalaxyMap:Boolean; begin
     Result := MapCalled = kmc_galaxy;
     if Result then begin
-      with FOwner, FEliteManager do MapGalaxy;
+      with FOwner, FEliteManager do if EliteMapClose then MapGalaxy;
       MapCalled := kmc_none;
       if IsFlying then Drive_display else Menu_display
     end
@@ -3462,7 +3154,7 @@ procedure TEliteContext.DoNavBack;
   function BackIfSystemMap:Boolean; begin
     Result := MapCalled = kmc_system;
     if Result then begin
-      with FOwner, FEliteManager do MapSystem;
+      with FOwner, FEliteManager do if EliteMapClose then MapSystem;
       MapCalled := kmc_none;
       if IsFlying then Drive_display else Menu_display
     end
@@ -3497,7 +3189,7 @@ procedure TEliteContext.DoNavBack;
 
   function BackIfFloor:Boolean; begin
     Result := CurrentDisplay in [kd_drive, kd_menu];
-    if Result then with FOwner, Felite do DoLaunchElite
+    if Result then with FOwner, Felite do DoLaunchElite(VocalAppUsed)
   end;
 
 begin
@@ -3521,13 +3213,14 @@ end;
 
 procedure TEliteContext.DoNavModeChange;
 begin
-  if IndexMode = 0 then IndexMode := SubIndex
-  else begin
+  if IndexMode = 0 then begin
+    IndexMode := SubIndex;
+    FOwner.FContext.FunctionSound
+  end else begin
     IndexMode := (IndexMode + 1) mod 4;
     if IndexMode = 0 then IndexMode := 1;
     SubIndex := IndexMode
   end;
-  FOwner.FContext.FunctionSound;
   Drive_display
 end;
 
@@ -3558,8 +3251,10 @@ end;
 
 procedure TEliteContext.DoNavSlide;
 begin
-  IndexMode := 0;
-  FOwner.FContext.FunctionSound;
+  if IndexMode <> 0 then begin
+    IndexMode := 0;
+    FOwner.FContext.FunctionSound
+  end;
   Drive_display
 end;
 
@@ -3600,7 +3295,7 @@ begin
   with FOwner, FEliteManager do if DisplayPanel then DoClicUnique(RightPanel);
   PanelCalled := kp_right;
   Menu_display;
-  with FOwner, FContext do  if not DisplayPanel then FunctionSound
+  with FOwner, FContext do  if not DisplayPanel and not isPause then FunctionSound
 end;
 
 procedure TEliteContext.DoRolePanelShow(DisplayPanel: boolean);
@@ -3608,7 +3303,7 @@ begin
    with FOwner, FEliteManager do if DisplayPanel then DoClicUnique(RadarPanel);
    PanelCalled := kp_bottom;
    Menu_display;
-   with FOwner, FContext do if not DisplayPanel then FunctionSound
+   with FOwner, FContext do if not DisplayPanel and not isPause then FunctionSound
 end;
 
 procedure TEliteContext.DoShipDismissRecall;
@@ -3647,19 +3342,23 @@ end;
 
 procedure TEliteContext.DoSMSlide;
 begin
-  IndexSMMode := 0;
+  if IndexSMMode <> 0 then begin
+    IndexSMMode := 0;
+    FOwner.FContext.FunctionSound
+  end;
   SystemMap_display
 end;
 
 procedure TEliteContext.DoSMSteps;
 begin
-  if IndexSMMode = 0 then IndexSMMode := SubSMIndex
-  else begin
+  if IndexSMMode = 0 then begin
+    IndexSMMode := SubSMIndex;
+    FOwner.FContext.FunctionSound
+  end else begin
     IndexSMMode := (IndexSMMode + 1) mod 4;
     if IndexSMMode = 0 then IndexSMMode := 1;
     SubSMIndex := IndexSMMode
   end;
-  FOwner.FContext.FunctionSound;
   SystemMap_display
 end;
 
@@ -3748,20 +3447,23 @@ end;
 
 procedure TEliteContext.DoVRSSlide;
 begin
-  IndexVRSMode := 0;
-  FOwner.FContext.FunctionSound;
+  if IndexVRSMode <> 0 then begin
+    IndexVRSMode := 0;
+    FOwner.FContext.FunctionSound
+  end;
   Drive_display
 end;
 
 procedure TEliteContext.DoVRSStep;
 begin
-  if IndexVRSMode = 0 then IndexVRSMode := SubVRSIndex
-  else begin
+  if IndexVRSMode = 0 then begin
+    IndexVRSMode := SubVRSIndex;
+    FOwner.FContext.FunctionSound
+  end else begin
     IndexVRSMode := (IndexVRSMode + 1) mod 4;
     if IndexVRSMode = 0 then IndexVRSMode := 1;
     SubVRSIndex := IndexVRSMode
   end;
-  FOwner.FContext.FunctionSound;
   Drive_display
 end;
 
@@ -3799,16 +3501,18 @@ end;
 
 procedure TEliteContext.Drive_display;
 begin
-  CurrentDisplay := kd_drive;
-  CurrentHud     := kh_drive;
-  with FOwner, FEliteStatus do
-    if InSrv then FOwner.UpdateZone( Context_EliteDriveVRS )
-      else
-    if HardpointDeployed then FOwner.UpdateZone( Context_EliteDriveCombat )
-      else
-    if LandinGearDown then FOwner.UpdateZone( Context_EliteDriveLanding )
-      else
-    FOwner.UpdateZone( Context_EliteDrive )
+  if not IsPause then begin
+    CurrentDisplay := kd_drive;
+    CurrentHud     := kh_drive;
+    with FOwner, FEliteStatus do
+      if InSrv then FOwner.UpdateZone( Context_EliteDriveVRS )
+        else
+      if HardpointDeployed then FOwner.UpdateZone( Context_EliteDriveCombat )
+        else
+      if LandinGearDown then FOwner.UpdateZone( Context_EliteDriveLanding )
+        else
+      FOwner.UpdateZone( Context_EliteDrive )
+  end
 end;
 
 procedure TEliteContext.DSD_display(forced: Boolean);
@@ -4120,8 +3824,10 @@ end;
 
 procedure TEliteContext.GalaxyMap_display;
 begin
-  CurrentDisplay := kd_galaxymap;
-  FOwner.UpdateZone( Context_GalaxyMap )
+  if not IsPause then begin
+    CurrentDisplay := kd_galaxymap;
+    FOwner.UpdateZone( Context_GalaxyMap )
+  end
 end;
 
 function TEliteContext.GetComPanelOpened: Boolean;
@@ -4274,6 +3980,11 @@ begin
   Result := KeyReadBoolean(ParamKey, 'UnicStep')
 end;
 
+function TEliteContext.GetVocalAppUsed: Boolean;
+begin
+  Result := KeyReadBoolean(ParamKey, 'VocalAppUsed')
+end;
+
 function TEliteContext.IsFlying: Boolean;
 begin
   with FOwner, FEliteStatus do begin
@@ -4298,12 +4009,19 @@ begin
     end
 end;
 
+function TEliteContext.IsPause: Boolean;
+begin
+  Result := CurrentDisplay = kd_pause
+end;
+
 procedure TEliteContext.Menu_display;
 begin
-  Step           := 1;
-  CurrentDisplay := kd_menu;
-  CurrentHud     := kh_menu;
-  FOwner.UpdateZone( Context_EliteMenu )
+  if not IsPause then begin
+    Step           := 1;
+    CurrentDisplay := kd_menu;
+    CurrentHud     := kh_menu;
+    FOwner.UpdateZone( Context_EliteMenu )
+  end
 end;
 
 procedure TEliteContext.NavClic(const SensA: TContextNotify;
@@ -4412,31 +4130,63 @@ procedure TEliteContext.PauseBack;
     end
   end;
 
+  procedure Restore; begin
+    with FOwner, Context do case DisplayBefore of
+      kd_mainmenu  : MainMenu_display;
+      kd_menu      : if IsFlying then DriveCase else Menu_display;
+      kd_drive     : DriveCase;
+      kd_fss       : ACS_display( IsFSSOpened );
+      kd_saa       : DSD_display( IsDSDOpened );
+      kd_galaxymap : GalaxyMap_display;
+      kd_systemmap : SystemMap_display;
+    end;
+  end;
+
+  procedure FixDisplay; begin
+    with FOwner, FEliteStatus do case GuiValue of
+      gt_internalpanel,
+      gt_externalpanel,
+      gt_rolepanel,
+      gt_stationservice,
+      gt_orrery,
+      gt_codex      : begin
+        ComPanelOpened := False;
+        Menu_display;
+      end;
+      gt_commspanel : begin
+        ComPanelOpened := True;
+        Menu_display
+      end;
+      gt_nofocus    : if IsFlying then Drive_display else Menu_display;
+      gt_galaxymap  : GalaxyMap_display;
+      gt_systemmap  : SystemMap_display;
+      gt_fssmode    : ACS_display( IsFSSOpened );
+      gt_saamode    : DSD_display( IsDSDOpened );
+    end;
+  end;
+
 begin
-  with FOwner, Context do case DisplayBefore of
-    kd_mainmenu  : MainMenu_display;
-    kd_menu      : Menu_display;
-    kd_drive     : DriveCase;
-    kd_fss       : ACS_display( IsFSSOpened );
-    kd_saa       : DSD_display( IsDSDOpened );
-    kd_galaxymap : GalaxyMap_display;
-    kd_systemmap : SystemMap_display;
-  end
+  CurrentDisplay := kd_none;
+  Restore;
+  FixDisplay;
+  FOwner.FContext.FunctionSound
 end; {PauseBack;}
 
 procedure TEliteContext.PauseEnable;
 begin
-  Pause_display
+  Pause_display;
+  FOwner.FContext.FunctionSound
 end;
 
 procedure TEliteContext.PauseFunctionBack;
 { --- Not for Elite }
 begin
-  if IsMapOpened then Menu_display
-  else case DisplayBefore of
-         kd_drive : Drive_display;
-         kd_menu  : Menu_display;
-       end
+  CurrentDisplay := kd_none;
+  if IsMapOpened then Menu_display else
+    case DisplayBefore of
+      kd_drive : Drive_display;
+      kd_menu  : Menu_display;
+    end
 end;
 
 procedure TEliteContext.Pause_display;
@@ -4596,6 +4346,11 @@ begin
   KeyWrite(ParamKey, 'UnicStep', Value)
 end;
 
+procedure TEliteContext.SetVocalAppUsed(const Value: Boolean);
+begin
+  KeyWrite(ParamKey, 'VocalAppUsed', Value)
+end;
+
 procedure TEliteContext.StepSelector(const ATag: Integer);
 begin
   case ATag of
@@ -4646,8 +4401,10 @@ end;
 
 procedure TEliteContext.SystemMap_display;
 begin
-  CurrentDisplay := kd_systemmap;
-  FOwner.UpdateZone( Context_System_Map )
+  if not IsPause then begin
+    CurrentDisplay := kd_systemmap;
+    FOwner.UpdateZone( Context_System_Map )
+  end
 end;
 
 procedure TEliteContext.TryLaunchOnDriveDisplay;
@@ -4667,6 +4424,7 @@ begin
   inherited Create( False );
   {Automatic started}
   ThAreaTobii     := AAreaTobii;
+  FStart          := True;
   Old_Docked      := True;
   Old_HardPoints  := False;
   Old_InSRV       := False;
@@ -4681,7 +4439,7 @@ begin
   while not Terminated and not Application.Terminated do begin
     Synchronize( Process );
     { --- We suppose Status.json updated each second by Frontier }
-    ThDelay( 1024 )
+    ThDelay( 1124 )
   end
 end;
 
@@ -4704,13 +4462,37 @@ procedure TContextObserver.Process;
   end;
 
   procedure UpdatePanelsView; begin
-    with ThAreaTobii, FEliteStatus, FElite do
-      case GuiValue of
-        gt_externalpanel : PanelCalled := kp_left;
-        gt_internalpanel : PanelCalled := kp_right;
-        gt_rolepanel     : PanelCalled := kp_bottom;
-        gt_commspanel    : ComPanelOpened := True;
-      end
+    with ThAreaTobii, FEliteStatus, FElite do begin
+      if (GuiValue <> Old_GuiValue) then begin
+        case Old_GuiValue of
+          gt_internalpanel,
+          gt_externalpanel,
+          gt_rolepanel,
+          gt_commspanel,
+          gt_galaxymap,
+          gt_systemmap : begin
+             ComPanelOpened := False;
+             MapCalled      := kmc_none;
+             case GuiValue of
+               gt_commspanel : begin ComPanelOpened := True; Menu_display; end;
+               gt_fssmode,
+               gt_saamode    : Drive_display;
+               gt_nofocus    : if not Docked and not Landed then Drive_display else Menu_display;
+               else Menu_display;
+             end;
+          end
+        end;
+        case GuiValue of
+          gt_galaxymap     : if MapCalled <> kmc_galaxy then DoMapGalaxyShow(False);
+          gt_systemmap     : if MapCalled <> kmc_system then DoMapSystemShow(False);
+          gt_externalpanel : if PanelCalled <> kp_right then DoLeftPanelShow(False);
+          gt_internalpanel : if PanelCalled <> kp_left then DoRightPanelShow(False);
+          gt_rolepanel     : if PanelCalled <> kp_bottom then DoRolePanelShow(False);
+          gt_commspanel    : if not ComPanelOpened then DoComPanelShow(False);
+        end;
+        Old_GuiValue := GuiValue
+      end;
+    end
   end;
 
   procedure UpdateWhenUndock; begin
@@ -4763,7 +4545,89 @@ procedure TContextObserver.Process;
     end
   end;
 
+  { --- External actions }
+
+  procedure ShowMenu; begin
+    with ThAreaTobii, FEliteStatus, FElite do begin
+      ComPanelOpened := GuiValue = gt_commspanel;
+      Menu_display
+    end
+  end;
+
+  procedure UpdatePanelsOnVocal; begin
+    with ThAreaTobii, FEliteStatus, FElite do
+      if (GuiValue <> Old_GuiValue) then begin
+        case Old_GuiValue of
+          gt_galaxymap, gt_systemmap : DoNavBack(False);
+        end;
+        Old_GuiValue := GuiValue;
+        if CurrentHud <> kh_menu then begin
+          case GuiValue of
+            gt_internalpanel,
+            gt_externalpanel,
+            gt_rolepanel,
+            gt_orrery,
+            gt_codex          : ShowMenu;
+            gt_commspanel     : ShowMenu;
+            gt_galaxymap      : DoMapGalaxyShow(False);
+            gt_systemmap      : DoMapSystemShow(False);
+          end;
+          CurrentHud := kh_menu
+        end else begin
+          if (CurrentHud <> kh_drive) and not Docked and not Landed then
+          case GuiValue of
+            gt_galaxymap      : DoMapGalaxyShow(False);
+            gt_systemmap      : DoMapSystemShow(False);
+            gt_nofocus        : Drive_display;
+          end
+        end
+      end
+  end;
+
+  function UpdateTrustingOnVocal:Boolean; begin
+    with ThAreaTobii, FEliteStatus, FElite do begin
+      Result := Old_LandingGear <> LandinGearDown;
+      if Result then begin
+        Old_LandingGear := LandinGearDown;
+        Drive_display
+      end
+    end
+  end;
+
+  procedure UpdateWhenDockinOnVocal; begin
+    with ThAreaTobii, FEliteStatus, FElite do begin
+      if FStart then begin
+        Old_Docked := False;
+        FStart     := False
+      end;
+
+      if Old_Docked <> Docked then begin
+        if Docked then Menu_display else Drive_display;
+        Old_Docked := Docked
+      end
+    end
+  end;
+
+  function IsVocalAssisted: Boolean; begin
+    with ThAreaTobii, FElite do Result := FEliteAssistUsed
+  end;
+
+  function CanContinue:Boolean; begin
+    with ThAreaTobii, FElite do Result := FEliteAssistStarted
+  end;
+
 begin
+  if not CanContinue then Exit;
+
+  if IsVocalAssisted then begin
+    { --- Update display when landing gear is deployed }
+    if not UpdateTrustingOnVocal then
+      { --- Update display on vocal action }
+      UpdatePanelsOnVocal;
+    UpdateWhenDockinOnVocal;
+    Exit
+  end;
+
   UpdatePanelsView;
   { --- Update menu when undock aftter ENTER clic }
   UpdateWhenUndock;
