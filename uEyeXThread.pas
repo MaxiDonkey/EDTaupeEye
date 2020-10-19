@@ -604,7 +604,7 @@ var
     DoColorize( AColor );
     case Valid of
       True : if FBlinkBack then ZoneUp else FOldIndex  := -1;
-      else FOldIndex := FItemIndex;
+      else FOldIndex := FItemIndex
     end;
     CheckSelected
   end;
@@ -883,7 +883,7 @@ begin
     sm_blinknotbacktimed  : Activate(True,  False, True,  False);
     sm_blinknotback       : Activate(True,  False, True,  False);
     sm_blinkback          : Activate(True,  False, True,  True);
-  end;
+  end
 end; {SetSelectMode}
 
 procedure TAreaPanels.SetTransitoryMultiClick(const Value: Boolean);
@@ -933,7 +933,7 @@ begin
     Sleep(10);
     Interval   := WaitClickDelay;
     Enabled    := True
-  end;
+  end
 end;
 
 procedure TAreaPanels.StartTimerSelected;
@@ -943,7 +943,7 @@ begin
     Sleep(10);
     Interval   := WaitClickDelay;
     Enabled    := True
-  end;
+  end
 end;
 
 procedure TAreaPanels.StopTimer;

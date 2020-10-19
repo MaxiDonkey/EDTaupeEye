@@ -957,7 +957,7 @@ begin
   if Assigned(Method) then
     if WaitForSingleObject(EliteMutex, INFINITE) <> WAIT_OBJECT_0 then RaiseLastOSError;
     try
-      Method(nil);
+      Method(nil)
     finally
       ReleaseMutex( EliteMutex )
     end
@@ -1497,8 +1497,7 @@ procedure TCustomEliteManager.PrimaryFire(tms: Integer);
 
 begin
   case EliteStatus.InSrv of
-    True  : VRSPrimaryFire;
-    False : ShipFire;
+    True : VRSPrimaryFire else ShipFire
   end
 end; {PrimaryFire}
 
@@ -1511,8 +1510,7 @@ procedure TCustomEliteManager.SecondaryFire(tms: Integer);
 
 begin
   case EliteStatus.InSrv of
-    True  : VRSSecondaryFire;
-    False : ShipFire;
+    True : VRSSecondaryFire else ShipFire
   end
 end; {SecondaryFire}
 
@@ -1786,7 +1784,7 @@ begin
       if tms < 1 then FKeyInventory.KeyTrigger_( 'SteerRightButton', WITH_KEYUP)
         else FKeyInventory.KeyTrigger_( 'SteerRightButton', tms)
     end
-  end;
+  end
 end;
 
 procedure TCustomEliteManager.VerticalThruster(tms: Integer);
@@ -2699,7 +2697,7 @@ begin
   while not Terminated and not Application.Terminated do begin
     Synchronize( Process );
     ThDelay( 500 )
-  end;
+  end
 end;
 
 procedure TEliteRunningObserver.Process;
@@ -2722,5 +2720,5 @@ initialization
   TEliteManager.Initialize;
   EliteRunningObserver := TEliteRunningObserver.Create
 finalization
-  EliteRunningObserver.Terminate;
+  EliteRunningObserver.Terminate
 end.

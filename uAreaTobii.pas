@@ -776,7 +776,7 @@ begin
     Result := Panel[index].Caption
   except
     Result := EmptyStr
-  end;
+  end
 end;
 
 function TAreaTobii.GetPanel(index: Integer): TPanel;
@@ -1799,7 +1799,7 @@ begin
       BoxUpdate(1, 1 + i, 91150 + i, Strings[i], True, sm_blinkback, False)
   finally
     Free
-  end;
+  end
 end;
 
 procedure TKeyboardContext.Paste_;
@@ -2286,7 +2286,7 @@ begin
       BoxUpdate(6, 1, 91278, 'CHAFF LAUNCHER',      True, sm_blinkback, False);
       BoxUpdate(6, 3, 91537, 'BACKWARD THRUST',     True, sm_directnotnull, False);
       BoxUpdate(6, 4, 91545, 'DOWN THRUST',         True, sm_directnotnull, False);
-      BoxUpdate(6, 5, 91539, 'FORWARD THRUST',      True, sm_directnotnull, False);
+      BoxUpdate(6, 5, 91539, 'FORWARD THRUST',      True, sm_directnotnull, False)
     end
 end;
 
@@ -2346,7 +2346,7 @@ begin
     BoxUpdate(5, 3, 91359, 'CAM 5',            True, sm_blinkback, False);
     BoxUpdate(5, 5, 91360, 'CAM 6',            True, sm_blinkback, False);
     BoxUpdate(6, 3, 91361, 'CAM 7',            True, sm_blinkback, False);
-    BoxUpdate(6, 5, 91362, 'CAM 8',            True, sm_blinkback, False);
+    BoxUpdate(6, 5, 91362, 'CAM 8',            True, sm_blinkback, False)
   end
 end;
 
@@ -2481,7 +2481,7 @@ begin
     BoxUpdate(4, 3, 91221, '150',           True, sm_blinkback, False);
     BoxUpdate(4, 4, 91222, '200 ',          True, sm_blinkback, False);
     BoxUpdate(4, 5, 91223, '300',           True, sm_blinkback, False);
-    BoxUpdate(4, 6, 91224, '500',           True, sm_blinkback, False);
+    BoxUpdate(4, 6, 91224, '500',           True, sm_blinkback, False)
   end
 end;
 
@@ -2632,7 +2632,7 @@ begin
   end else begin
     IndexACSMode := (IndexACSMode + 1) mod 4;
     if IndexACSMode = 0 then IndexACSMode := 1;
-    SubACSIndex := IndexACSMode;
+    SubACSIndex := IndexACSMode
   end;
   ACS_display(IsFSSOpened)
 end;
@@ -3088,7 +3088,7 @@ procedure TEliteContext.DoMenuEchap;
     if Result then begin
       PanelCalled := kp_none;
       Back_;
-      if IsFlying then Drive_display else Menu_display;
+      if IsFlying then Drive_display else Menu_display
     end
   end;
 
@@ -3536,7 +3536,7 @@ begin
       gt_saamode        : { --- Enabled by Thread };
       else Result := False
     end
-  end;
+  end
 end; {EliteContextRetrieveOnLaunch}
 
 procedure TEliteContext.EliteNotify(const ATag: Integer);
@@ -4124,7 +4124,7 @@ procedure TEliteContext.PauseBack;
       kd_saa       : DSD_display( IsDSDOpened );
       kd_galaxymap : GalaxyMap_display;
       kd_systemmap : SystemMap_display;
-    end;
+    end
   end;
 
   procedure FixDisplay; begin
@@ -4147,7 +4147,7 @@ procedure TEliteContext.PauseBack;
       gt_systemmap  : SystemMap_display;
       gt_fssmode    : ACS_display( IsFSSOpened );
       gt_saamode    : DSD_display( IsDSDOpened );
-    end;
+    end
   end;
 
 begin
@@ -4463,7 +4463,7 @@ procedure TContextObserver.Process;
                gt_saamode    : Drive_display;
                gt_nofocus    : if not Docked and not Landed then Drive_display else Menu_display;
                else Menu_display;
-             end;
+             end
           end
         end;
         case GuiValue of
@@ -4475,7 +4475,7 @@ procedure TContextObserver.Process;
           gt_commspanel    : if not ComPanelOpened then DoComPanelShow(False);
         end;
         Old_GuiValue := GuiValue
-      end;
+      end
     end
   end;
 
