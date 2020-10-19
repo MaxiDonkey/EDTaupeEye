@@ -32,20 +32,20 @@ type
 
   TEliteStatus = class
   private
-    FValue         : Cardinal;
-    FPips          : string;
-    FFireGroup     : Integer;
-    FFuelMain      : Double;
-    FFuelReservoir : Double;
-    FGuiFocus      : Integer;
-    FLatitude      : Double;
-    FLongitude     : Double;
-    FHeading       : Integer;
-    FAltitude      : Integer;
-    FCargo         : Double;
-    FLegalState    : string;
-    FMutex         : Cardinal;
-    {Evvents}
+    FValue                   : Cardinal;
+    FPips                    : string;
+    FFireGroup               : Integer;
+    FFuelMain                : Double;
+    FFuelReservoir           : Double;
+    FGuiFocus                : Integer;
+    FLatitude                : Double;
+    FLongitude               : Double;
+    FHeading                 : Integer;
+    FAltitude                : Integer;
+    FCargo                   : Double;
+    FLegalState              : string;
+    FMutex                   : Cardinal;
+    {Events}
     FOnGuiChange             : TGuiNotify;
     FOnDocking               : TBoolChangeNotify;
     FOnLanding               : TBoolChangeNotify;
@@ -199,6 +199,7 @@ type
 
   TBufferAddNotify  = procedure (const ASt: string) of object;
   TBufferReadNotify = function: string of object;
+
   TStatusStringFIFO = class(TStringList)
   private
     FMutex  : Cardinal;
@@ -312,7 +313,7 @@ var
   i : Integer;
 begin
   for i := 0  to 30     do ArrayOfByte[i] := 1 shl i;
-  for i := 31 to MaxShl do ArrayOfByte[i] := Trunc(Math.Power(2, i));
+  for i := 31 to MaxShl do ArrayOfByte[i] := Trunc(Math.Power(2, i))
 end;
 
 function isB1(const Value: Cardinal; index: Integer):Boolean;
@@ -334,7 +335,7 @@ begin
   while Value > ArrayOfByte[index] do begin
     if isB1(Value, index) then Result := Format('1%s', [Result])
       else Result := Format('0%s', [Result]);
-    Inc( index );
+    Inc( index )
   end
 end;
 
@@ -368,7 +369,7 @@ begin
     end
   finally
     Stream.Free
-  end;
+  end
 end;
 
 
@@ -531,7 +532,7 @@ begin
     if Assigned(FOnInSrv)              then FOnInSrv(Self, InSrv);
     if Assigned(FOnHudInanalysisMode)  then FOnHudInanalysisMode(Self, HudInanalysisMode);
     if Assigned(FOnNightVision)        then FOnNightVision(Self, NightVision);
-    if Assigned(FOnFsdJump)            then FOnFsdJump(Self, FsdJump);
+    if Assigned(FOnFsdJump)            then FOnFsdJump(Self, FsdJump)
   end
 end;
 
@@ -592,7 +593,7 @@ end;
 
 procedure TEliteStatus.SetFuelReservoir(const Value: Double);
 begin
-  if FFuelReservoir <> Value then DoubleAssignment(FFuelReservoir, Value);
+  if FFuelReservoir <> Value then DoubleAssignment(FFuelReservoir, Value)
 end;
 
 procedure TEliteStatus.SetGuiFocus(const Value: Integer);
@@ -627,13 +628,13 @@ constructor TEliteStatus.Create;
 begin
   inherited Create;
   FMutex := CreateMutex(nil, False, 'StatusSate');
-  if FMutex = 0 then RaiseLastOSError;
+  if FMutex = 0 then RaiseLastOSError
 end;
 
 destructor TEliteStatus.Destroy;
 begin
   CloseHandle( FMutex );
-  inherited;
+  inherited
 end;
 
 procedure TEliteStatus.CardinalAssignment(var Card1: Cardinal; Card2: Cardinal);
@@ -797,7 +798,7 @@ constructor TStatusStringFIFO.Create;
 begin
   inherited Create;
   FMutex := CreateMutex(nil, False, 'StatusStringFIFO');
-  if FMutex = 0 then RaiseLastOSError;
+  if FMutex = 0 then RaiseLastOSError
 end;
 
 function TStatusStringFIFO.Depile: string;
@@ -894,7 +895,7 @@ begin
       Heading       := ThExtractor.ExtractHeading;
       Altitude      := ThExtractor.ExtractAltitude;
       Cargo         := ThExtractor.ExtractCargo;
-      LegalState    := ThExtractor.ExtractLegalState;
+      LegalState    := ThExtractor.ExtractLegalState
     end
   end
 end;
@@ -917,15 +918,15 @@ begin
   {Launch on create}
   ThStatusString  := StatusStringFIFO;
   FreeOnTerminate := True;
-  Priority        := tpLower;
+  Priority        := tpLower
 end;
 
 procedure TStatusFileWriter.Execute;
 begin
   while not Terminated and not Application.Terminated do begin
     Synchronize( Process );
-    ThDelay( 160 );
-  end;
+    ThDelay( 160 )
+  end
 end;
 
 procedure TStatusFileWriter.Process;
@@ -1069,7 +1070,7 @@ end;
 function TJSonStatusExtractor.ExtractLegalState: string;
 begin
   Result := GetAfterStr(FSource, 'LegalState":"');
-  Result := GetBeforStr(Result, '"');
+  Result := GetBeforStr(Result, '"')
 end;
 
 initialization

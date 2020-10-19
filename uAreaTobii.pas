@@ -17,16 +17,15 @@ uses
   uEyeXThread;
 
 type
-  TKindDisplay = (kd_none, kd_menu, kd_drive, kd_fss, kd_saa, kd_galaxymap, kd_systemmap,
-                  kd_function, kd_pause, kd_mainmenu, kd_elitemenu, kd_keyboard, kd_params);
+  TKindDisplay     = ( kd_none,      kd_menu,       kd_drive,    kd_fss,        kd_saa,
+                       kd_galaxymap, kd_systemmap,  kd_function, kd_pause,      kd_mainmenu,
+                       kd_elitemenu, kd_keyboard,   kd_params );
 
-  TKeyboardContext = class;
-  TEliteContext = class;
+  TKeyboardKind    = ( kk_alpha,     kk_num,        kk_special,  kk_navigation, kk_critik );
+  TKindMapCall     = ( kmc_none,     kmc_galaxy,    kmc_system );
+  TKindPanels      = ( kp_none,      kp_left,       kp_right,    kp_bottom );
+  TKindHud         = ( kh_menu,      kh_drive );
 
-  TKeyboardKind    = (kk_alpha, kk_num, kk_special, kk_navigation, kk_critik);
-  TKindMapCall     = (kmc_none, kmc_galaxy, kmc_system);
-  TKindPanels      = (kp_none, kp_left, kp_right, kp_bottom);
-  TKindHud         = (kh_menu, kh_drive);
   TContextNotify   = procedure of object;
   TGearTypeNotify  = procedure (const Mode: TLandingGearType) of object;
   TCockpitNotify   = procedure (const Mode : TCockpitModeType) of object;
@@ -34,7 +33,10 @@ type
   TIntNotify       = procedure (Value : Byte) of object;
   TIntANotify      = procedure (Value : Integer) of object;
   TBoolNotify      = procedure (Value : Boolean) of object;
-  TAreaTobii = class(TComponent)
+
+  TKeyboardContext = class;
+  TEliteContext    = class;
+  TAreaTobii       = class(TComponent)
   private
     FForm             : TForm;
     FContext          : TKeyboardContext;
@@ -111,9 +113,10 @@ type
   TEliteContext = class
   private
     FOwner              : TAreaTobii;
-    FSwitchUpdate       : Boolean;              // --- Update Switch display after ENTER
-    FEliteAssistUsed    : Boolean;              // --- False on app start, True as soon an ED function choosed
-    FEliteAssistStarted : Boolean;              // --- False until an ED function selected (Thread observer process)
+    FSwitchUpdate       : Boolean;      // --- Update Switch display after ENTER
+    FEliteAssistUsed    : Boolean;      // --- False on app start, True as soon an ED function choosed
+    FEliteAssistStarted : Boolean;      // --- False until an ED function selected (Thread observer process)
+
     { --- Local Tools }
     procedure StepSelector(const ATag: Integer);
     procedure DoClicUnique(const Method: TContextNotify); overload;
@@ -126,6 +129,7 @@ type
     procedure NavClic(const SensA: TContextNotify; const SensB: TIntANotify); overload;
     procedure DoUnicClic(const Method: TIntegerNotify; Value: Integer); overload;
     procedure DoUnicClic(const Method: TIntNotify; Value: Integer); overload;
+
     { --- Elite context }
     procedure Context_Elite;
     procedure Context_Pause;
@@ -135,7 +139,7 @@ type
     procedure Context_EliteDriveCombat;
     procedure Context_EliteDriveLanding;
     procedure Context_EliteDriveVRS;
-    procedure Context_Func;                        // Function Header
+    procedure Context_Func;                        //Function Header
     procedure Context_Func0;                       //0: Panels area
     procedure Context_Func1;                       //1: DIV area
     procedure Context_Func2;                       //2: Weapons area
@@ -647,7 +651,7 @@ end;
 
 function IsEliteRunning: Boolean;
 begin
-  Result :=  FindWindow( PWideChar(ELITE_CLASS), nil ) <> 0;
+  Result :=  FindWindow( PWideChar(ELITE_CLASS), nil ) <> 0
 end;
 
 procedure EliteForeGround;
@@ -655,7 +659,7 @@ begin
   try
     SetForegroundWindow( FindWindow( PWideChar(ELITE_CLASS), nil ) )
   except
-  end;
+  end
 end;
 
 procedure Delay(ms: Cardinal);
@@ -664,7 +668,7 @@ var
 begin
   S := GetTickCount + ms;
   with Application do repeat
-    Sleep( 10 );
+    Sleep( 10 )
   until Terminated or (GetTickCount > S)
 end;
 
@@ -881,7 +885,7 @@ begin
       Alt := FindAltFrom(FBuffer, CapsLock);
       if Alt = EmptyStr then Alt := FindAltOrtho(FBuffer, CapsLock)
     end else
-      Alt := FindAltPost(FLastWord, CapsLock);
+      Alt := FindAltPost(FLastWord, CapsLock)
   end;
   Make_Alternative( Alt )
 end;
@@ -1414,7 +1418,7 @@ begin
   if Length(FBuffer) >= 1 then begin
     FBuffer := Copy(FBuffer, 1, Length(FBuffer) - 1);
     AltDisplay;
-    RepaintKeyboardAlpha;
+    RepaintKeyboardAlpha
   end;
   KeySound;
   AreaPanels.Unselect
@@ -1456,8 +1460,8 @@ begin
     Border := False;
     case DisplayBeforeKeyboard of
       kd_menu      : Menu_display;
-      kd_galaxymap : Context_GalaxyMap
-      else MainMenu_display;
+      kd_galaxymap : Context_GalaxyMap;
+      else MainMenu_display
     end;
     DisplayBeforeKeyboard := kd_none
   end
@@ -1467,7 +1471,7 @@ procedure TKeyboardContext.DoMainKeyBoardLaunch;
 begin
   with FOwner, FContext, FElite do begin
     CurrentDisplay := kd_keyboard;
-    UpdateZone( Context_Keyboard );
+    UpdateZone( Context_Keyboard )
   end
 end;
 
@@ -1665,8 +1669,7 @@ begin
   AltDisplay;
   SendTextTo(Car);
   KeySound;
-  AreaPanels.Unselect;
-//  RepaintKeyboardAlpha  { --- WARNING only display one character }
+  AreaPanels.Unselect
 end; {DoWithCar}
 
 procedure TKeyboardContext.FunctionSound;
@@ -1817,36 +1820,20 @@ begin
   end
 end;
 
+var
+  Bool7True : array[0..6] of Boolean = (True, True, True, True, True, True, True);
+  Str7Empty : array[0..6] of string  = ('', '', '', '', '', '', '');
+  Int7Tag   : array[0..6] of Integer = (91200, 91200, 91200, 91200, 91200, 91200, 91200);
+
 procedure TKeyboardContext.ResetAreas;
+var
+  i : Integer;
 begin
-  with FOwner do begin
-    VisibleUpdate(1, [True, True, True, True, True, True, True]);
-    VisibleUpdate(2, [True, True, True, True, True, True, True]);
-    VisibleUpdate(3, [True, True, True, True, True, True, True]);
-    VisibleUpdate(4, [True, True, True, True, True, True, True]);
-    VisibleUpdate(5, [True, True, True, True, True, True, True]);
-    VisibleUpdate(6, [True, True, True, True, True, True, True]);
-
-    CaptionUpdate(1, ['', '', '', '', '', '', '']);
-    CaptionUpdate(2, ['', '', '', '', '', '', '']);
-    CaptionUpdate(3, ['', '', '', '', '', '', '']);
-    CaptionUpdate(4, ['', '', '', '', '', '', '']);
-    CaptionUpdate(5, ['', '', '', '', '', '', '']);
-    CaptionUpdate(6, ['', '', '', '', '', '', '']);
-
-    NullUpdate(1, [True, True, True, True, True, True, True]);
-    NullUpdate(2, [True, True, True, True, True, True, True]);
-    NullUpdate(3, [True, True, True, True, True, True, True]);
-    NullUpdate(4, [True, True, True, True, True, True, True]);
-    NullUpdate(5, [True, True, True, True, True, True, True]);
-    NullUpdate(6, [True, True, True, True, True, True, True]);
-
-    TagsUpdate(1, [91200, 91200, 91200, 91200, 91200, 91200, 91200]);
-    TagsUpdate(2, [91200, 91200, 91200, 91200, 91200, 91200, 91200]);
-    TagsUpdate(3, [91200, 91200, 91200, 91200, 91200, 91200, 91200]);
-    TagsUpdate(4, [91200, 91200, 91200, 91200, 91200, 91200, 91200]);
-    TagsUpdate(5, [91200, 91200, 91200, 91200, 91200, 91200, 91200]);
-    TagsUpdate(6, [91200, 91200, 91200, 91200, 91200, 91200, 91200])
+  with FOwner do for i := 1 to 6 do begin
+    VisibleUpdate (i, Bool7True );
+    CaptionUpdate (i, Str7Empty );
+    NullUpdate    (i, Bool7True );
+    TagsUpdate    (i, Int7Tag   )
   end
 end;
 
@@ -2007,7 +1994,7 @@ begin
     ResetAreas;
     BoxUpdate(1, 7, 91007, 'BACK',          True, sm_blinkback, False);
     BoxUpdate(3, 7, 91581, 'MENU',          True, sm_blinkback, False);
-    BoxUpdate(4, 7, 91591, 'DRIVE',         True, sm_blinkback, False);
+    BoxUpdate(4, 7, 91591, 'DRIVE',         True, sm_blinkback, False)
   end
 end;
 
@@ -2204,7 +2191,7 @@ begin
     if not IsDocked or (MapCalled in [kmc_galaxy, kmc_system])
       then BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
     BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False);
-    Exit;
+    Exit
   end;
 
   with FOwner do begin
@@ -2247,7 +2234,7 @@ begin
         BoxUpdate(1, 5, 91350, 'CAMERA',        True, sm_blinkback, False)
       end;
     end;
-    BoxUpdate(1, 7, 91571, 'BACK',          True, sm_blinkback, False);
+    BoxUpdate(1, 7, 91571, 'BACK',          True, sm_blinkback, False)
   end
 end;
 
@@ -2517,12 +2504,12 @@ begin
     BoxUpdate(1, 3, 91460, 'ZOOM IN',       True, BtnMode, False);
     BoxUpdate(1, 5, 91461, 'ZOOM OUT',      True, BtnMode, False);
     if not VocalAppUsed then
-      BoxUpdate(1, 7, 91453, 'BACK',          True, sm_blinkback, False);
+      BoxUpdate(1, 7, 91453, 'BACK',        True, sm_blinkback, False);
     BoxUpdate(2, 4, 91456, 'GO UP',         True, BtnMode, False);
     BoxUpdate(4, 2, 91458, 'GO LEFT',       True, BtnMode, False);
     BoxUpdate(4, 6, 91459, 'GO RIGHT',      True, BtnMode, False);
     if not VocalAppUsed then
-      BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
+      BoxUpdate(6, 1, 91570, 'SWITCH',      True, sm_blinkback, False);
     BoxUpdate(6, 4, 91457, 'GO DOWN',       True, BtnMode, False);
     BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False)
   end
@@ -2634,7 +2621,7 @@ begin
     IndexACSMode := 0;
     FOwner.FContext.FunctionSound
   end;
-  ACS_display(IsFSSOpened);
+  ACS_display(IsFSSOpened)
 end;
 
 procedure TEliteContext.DoACSSteps;
@@ -2741,8 +2728,7 @@ end;
 
 procedure TEliteContext.DoVRSDriveAssist;
 begin
-  with FOwner, FEliteManager do
-    if FEliteStatus.InSrv then DriveAssist
+  with FOwner, FEliteManager do if FEliteStatus.InSrv then DriveAssist
 end;
 
 procedure TEliteContext.DoDriveLandingBackThrust(NotLanding: Boolean);
@@ -2867,7 +2853,7 @@ begin
     IndexDSDMode := 0;
     FOwner.FContext.FunctionSound
   end;
-  DSD_display( IsDSDOpened );
+  DSD_display( IsDSDOpened )
 end;
 
 procedure TEliteContext.DoDSDSteps;
@@ -3046,8 +3032,8 @@ begin
         { --- Display KeyBoard }
         CurrentDisplay := kd_keyboard;
         with FOwner, FContext do UpdateZone( Context_Keyboard )
-      end;
-    end;
+      end
+    end
 end;
 
 procedure TEliteContext.DoDriveLandingDownThrust(NotLanding: Boolean);
@@ -3077,7 +3063,7 @@ begin
     MapCalled := kmc_galaxy;
     if DisplayMap then MapGalaxy;
     if VocalAppUsed then GalaxyMap_display else Menu_display;
-    if  not isPause then FunctionSound
+    if not isPause then FunctionSound
   end
 end;
 
@@ -3087,7 +3073,7 @@ begin
     MapCalled := kmc_system;
     if DisplayMap then MapSystem;
     if VocalAppUsed then SystemMap_display else Menu_display;
-    if  not isPause then FunctionSound
+    if not isPause then FunctionSound
   end
 end;
 
@@ -3483,7 +3469,7 @@ end;
 
 procedure TEliteContext.DoVRSTurret;
 begin
-  with FOwner, FEliteManager, FEliteStatus do if InSrv then VRSTurret;
+  with FOwner, FEliteManager, FEliteStatus do if InSrv then VRSTurret
 end;
 
 procedure TEliteContext.DoVRSUpView;
@@ -3987,10 +3973,9 @@ end;
 
 function TEliteContext.IsFlying: Boolean;
 begin
-  with FOwner, FEliteStatus do begin
+  with FOwner, FEliteStatus do
     { --- Not docked and not landed }
-    Result := not IsDocked and not IsLanded;
-  end
+    Result := not IsDocked and not IsLanded
 end;
 
 function TEliteContext.IsLanded: Boolean;
@@ -4386,17 +4371,16 @@ end;
 
 procedure TEliteContext.Switch;
 begin
-  if MapCalled <> kmc_none then begin
-      case MapCalled of
-        kmc_galaxy : if CurrentDisplay = kd_galaxymap then Menu_display else GalaxyMap_display;
-        kmc_system : if CurrentDisplay = kd_systemmap then Menu_display else SystemMap_display;
-      end
-  end else begin
+  if MapCalled <> kmc_none then
+    case MapCalled of
+      kmc_galaxy : if CurrentDisplay = kd_galaxymap then Menu_display else GalaxyMap_display;
+      kmc_system : if CurrentDisplay = kd_systemmap then Menu_display else SystemMap_display;
+    end
+  else
     case CurrentDisplay of
       kd_menu : drive_display;
       else Menu_display
     end
-  end
 end;
 
 procedure TEliteContext.SystemMap_display;
@@ -4624,6 +4608,7 @@ begin
     if not UpdateTrustingOnVocal then
       { --- Update display on vocal action }
       UpdatePanelsOnVocal;
+    { --- Update display when doking or undocking }
     UpdateWhenDockinOnVocal;
     Exit
   end;

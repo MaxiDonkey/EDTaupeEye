@@ -50,16 +50,18 @@ type
     class procedure Finnalize;
   end;
 
-  TSelectMode  = (sm_directnull, sm_directnulltimed,
-                  sm_directnotnull, sm_blinknotbacktimed , sm_blinknotback, sm_blinkback,
-                  sm_none);
-  TBlinkType   = (bt_transitory, bt_persistent);
-  TModeTrigger = (mt_direct, mt_timer, mt_zoneup);
+  TSelectMode  = ( sm_directnull,    sm_directnulltimed,
+                   sm_directnotnull, sm_blinknotbacktimed , sm_blinknotback, sm_blinkback,
+                   sm_none);
+  TBlinkType   = ( bt_transitory,    bt_persistent );
+  TModeTrigger = ( mt_direct,        mt_timer,              mt_zoneup );
+
   TTabPanels   = array of TPanel;
   TTabModes    = array of TSelectMode;
   TTabNuls     = array of Boolean;
   TBoolSelect  = array of Boolean;
   TIntTag      = array of Integer;
+
   TTrigNotify  = procedure (Sender: TObject; KeyUp: Boolean; ATag: Integer) of object;
   TIdxNotify   = procedure (Sender: TObject; OldValue, NewValue: Integer) of object;
   TTagNotify   = procedure (Sender: TObject; ATag: Integer) of object;
@@ -278,7 +280,7 @@ function GetScreenBounds(const Panel: TPanel): TRect;
 var originpoint: TPoint;
 begin
 	originpoint := Panel.ClientToScreen(point(0,0));
-  result := TRect.Create(originpoint,Panel.Width,Panel.Height);
+  result := TRect.Create(originpoint,Panel.Width,Panel.Height)
 end;
 
 procedure FormatPanel(const Panel: TPanel; const Border: Boolean = False);
@@ -301,7 +303,7 @@ begin
     ParentShowHint         := False;
     ShowCaption            := True;
     TabStop                := False;
-    UseDockManager         := False;
+    UseDockManager         := False
   end
 end;
 
@@ -326,7 +328,7 @@ end;
 
 class procedure TCallFifo.Initialize;
 begin
-  if not Assigned(CallFifo) then CallFifo := TCallFifo.Create;
+  if not Assigned(CallFifo) then CallFifo := TCallFifo.Create
 end;
 
 function TCallFifo.Peek: Integer;
@@ -337,7 +339,7 @@ begin
     if Self.Count > 0 then begin
       try Result := StrToInt( Self.Strings[0] ) except Result := NULL_STACK end;
       Self.Delete(0);
-      Sleep(60);
+      Sleep(60)
     end
   finally
     FMutex.Release
@@ -372,15 +374,15 @@ begin
   {Must be started}
   ThPile          := APile;
   ThAreas         := AAreas;
-  FreeOnTerminate := True;
+  FreeOnTerminate := True
 end;
 
 procedure TCallSurveyor.Execute;
 begin
   while not Terminated and not Application.Terminated do begin
     Synchronize( Process );
-    ThDelay( 1 );
-  end;
+    ThDelay( 1 )
+  end
 end;
 
 class procedure TCallSurveyor.Finnalize;
@@ -450,7 +452,7 @@ end;
 procedure TLauncher.Initialize;
 begin
   TCallFifo.Initialize;
-  TCallSurveyor.Initialize;
+  TCallSurveyor.Initialize
 end;
 
 { TAreaPanels }
@@ -458,7 +460,7 @@ end;
 function TAreaPanels.ActiveCount: Integer;
 begin
   RetrieveActivPanels;
-  Result := Length(FActivPanels);
+  Result := Length(FActivPanels)
 end;
 
 procedure TAreaPanels.RetrieveActivPanels;
@@ -488,7 +490,7 @@ begin
   FPanels[index] := Panel;
   { --- La zone n'est pas sélectionnée par défaut }
   SetLength(FSelected, Count);
-  FSelected[index] := False;
+  FSelected[index] := False
 end;
 
 procedure TAreaPanels.AddTag(const Value: Integer);
@@ -530,7 +532,7 @@ begin
   AddMode    ( AMode );
   AddNull    ( ANull );
   AddTag     ( ATag  );
-  AddVisible ( False );
+  AddVisible ( False )
 end;
 
 procedure TAreaPanels.AddMode(const AMode: TSelectMode);
@@ -570,12 +572,12 @@ var
 
   function CanProcess: Boolean; begin
     Result := (AIndex > -1) and (AIndex < Length(FPanels)) and not IsNullPanel;
-    if Valid then AColor := ValiColor else AColor := SeleColor;
+    if Valid then AColor := ValiColor else AColor := SeleColor
   end;
 
   procedure DoColorize(const SColor: TColor); begin
     with FPanels[AIndex] do Color := SColor;
-    Update;
+    Update
   end;
 
   procedure ZoneUp; begin
@@ -592,7 +594,7 @@ var
        { --- Si la zone est sélectionnée alors lancer le timer de désélection }
        FSelected[AIndex] := True;
        FSelectIndex      := AIndex;
-       StartTimerSelected;
+       StartTimerSelected
     end
   end;
 
@@ -623,14 +625,14 @@ begin
   with FValidTimer do begin
     Enabled  := False;
     Interval := WaitClickDelay;
-    OnTimer  := TimerProcess;
+    OnTimer  := TimerProcess
   end;
 
   FSelectTimer  := TTimer.Create(Application.MainForm);
   with FSelectTimer do begin
     Enabled  := False;
     Interval := WaitClickDelay;
-    Ontimer  := SelectProcess;
+    Ontimer  := SelectProcess
   end;
 
   FKeyMessageSender := KeyMessageSender;
@@ -758,7 +760,7 @@ end;
 
 procedure TAreaPanels.Repaint;
 begin
-  ProcessWithPanels( PanelChangeVisible );
+  ProcessWithPanels( PanelChangeVisible )
 end;
 
 procedure TAreaPanels.Reset;
@@ -768,7 +770,7 @@ begin
   SetLength(FNullPanels,   0);
   SetLength(FSelected,     0);
   SetLength(FTags,         0);
-  SetLength(FVisiblePanel, 0);
+  SetLength(FVisiblePanel, 0)
 end;
 
 function TAreaPanels.Selected(const index: Integer): Boolean;
@@ -822,7 +824,7 @@ end;
 procedure TAreaPanels.SetBorder(const Value: Boolean);
 begin
   KeyWrite(ParamKey, 'AreaBorder', Value);
-  ProcessWithPanels( PanelChangeBorder );
+  ProcessWithPanels( PanelChangeBorder )
 end;
 
 procedure TAreaPanels.SetItemIndex(const Value: Integer);
@@ -903,7 +905,7 @@ procedure TAreaPanels.SetVisible(index: Integer; const Value: Boolean);
 begin
   try
     FVisiblePanel[index] := Value;
-    ProcessWithPanels( PanelChangeVisible );
+    ProcessWithPanels( PanelChangeVisible )
   except
   end
 end;
@@ -1048,13 +1050,13 @@ var
   i : Integer;
 begin
   for i := 0 to Length(FPanels)-1 do with FPanels[i] do
-    if FSelected[i] then Color := ValiColor else Color := BackColor;
+    if FSelected[i] then Color := ValiColor else Color := BackColor
 end;
 
 procedure TAreaPanels.Unselect;
 begin
   FOldIndex := -1;
-  UnColorize;
+  UnColorize
 end;
 
 procedure TAreaPanels.Update;
