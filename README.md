@@ -1,7 +1,7 @@
 # EDTaupeEye
 Elite Dangerous Tool (using Tobii Eye trackers to play with Elite  Dangerous) From **Galactic 911**
 
-**Project in progress** [1234**5**-----]
+**Project in progress** [1234567**8**--]
 
 ## **Abstract**   
 
@@ -9,7 +9,7 @@ Elite Dangerous Tool (using Tobii Eye trackers to play with Elite  Dangerous) Fr
 The overlay splits the screen into multiple areas that can be activated individually using gazing 
 and blinking to simulate a mouse click.
 
-- **EdTaupeEye** reads the *Cutom.3.0.binds* file in order to know the keyboard shortcuts. He can add his 
+- **EdTaupeEye** reads the *Custom.3.0.binds* file in order to know the keyboard shortcuts. He can add his 
 own shortcuts to access all the functions available in Elite Dangerous. The tool keeps a history 
 of changes it has made to the file.
 
