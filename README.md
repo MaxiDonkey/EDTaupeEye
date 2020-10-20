@@ -32,6 +32,12 @@ In this case, it will make a backup of the *Custom.3.0.binds* file before saving
 
 If you make an in-game modification of the bindings, then you must relaunch *EDTaupeEye*, because the *Custom.3.0.binds* file is only read when the application is launched.
 
+## **Use of voice software in addition**
+
+You can use any voice software with *EDTaupeEye*, but we recommend that you use the *RaoulFumier* software soon available on *GitHub*. This software has the advantage of allowing many commands to be executed simultaneously.
+This software is only available for the French language and does not require any configuration to be used with *Elite Dangerous*. 
+It also allows you to dictate your messages to other commanders.
+
 ## **Overview**
 [Piloting the ship](https://github.com/MaxiDonkey/EDTaupeEye/tree/master/img/edte_img0mini.png)
 
