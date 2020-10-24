@@ -21,9 +21,12 @@ type
                        kd_galaxymap, kd_systemmap,  kd_function, kd_pause,      kd_mainmenu,
                        kd_elitemenu, kd_keyboard,   kd_params );
 
+  TSpeedType       = ( ts_25,        ts_50,         ts_75,       ts_100,        ts_m25,
+                       ts_m50,       ts_m75,        ts_m100,     ts_0);
   TKeyboardKind    = ( kk_alpha,     kk_num,        kk_special,  kk_navigation, kk_critik );
-  TKindMapCall     = ( kmc_none,     kmc_galaxy,    kmc_system );
   TKindPanels      = ( kp_none,      kp_left,       kp_right,    kp_bottom );
+  TKindSpeed       = ( ks_speed25,   ks_speed50,    ks_speed75,  ks_speed100 );
+  TKindMapCall     = ( kmc_none,     kmc_galaxy,    kmc_system );
   TKindHud         = ( kh_menu,      kh_drive );
 
   TContextNotify   = procedure of object;
@@ -116,6 +119,7 @@ type
     FSwitchUpdate       : Boolean;      // --- Update Switch display after ENTER
     FEliteAssistUsed    : Boolean;      // --- False on app start, True as soon an ED function choosed
     FEliteAssistStarted : Boolean;      // --- False until an ED function selected (Thread observer process)
+    FSpeed              : TSpeedType;   // --- lowcruise Speed flight
 
     { --- Local Tools }
     procedure StepSelector(const ATag: Integer);
@@ -225,6 +229,9 @@ type
     procedure SetIsFSSOpened(const Value: Boolean);
     function  GetVocalAppUsed: Boolean;
     procedure SetVocalAppUsed(const Value: Boolean);
+    function  GetReverseForward: Boolean;
+    procedure SetReverseForward(const Value: Boolean);
+    function  GetLowCruise: Boolean;
   public
     { --- Lauch and retieve Elite state }
     procedure TryLaunchOnMenuDisplay;
@@ -299,14 +306,19 @@ type
     procedure DoNavOuest;
     procedure DoNavPere;
     procedure DoNavFils;
-    procedure DoSuperNavigation;
-    procedure DoFSD;
     procedure DoPrevShip;
     procedure DoNextShip;
     procedure DoNavNordOuest;
     procedure DoNavNordEst;
     procedure DoNavSudOuest;
     procedure DoNavSudEst;
+
+    { --- Speed selector }
+    procedure DoSpeedReverse;
+    procedure DoSetSpeed(Value: TKindSpeed);
+    procedure DoFlightSpeedNull;
+    procedure DoSuperNavigation;
+    procedure DoFSD;
 
     { --- Galaxy map notify actions }
     procedure NavLauncher(const MethA: TContextNotify; const MethB: TIntANotify;
@@ -403,17 +415,21 @@ type
     { --- Is Pause mode enabled }
     function IsPause: Boolean;
 
+    { --- LowCruise speed }
+    property Speed: TSpeedType read FSpeed write FSpeed;
+    property LowCruise: Boolean read GetLowCruise;
+    { --- Menu indexes }
     property Step: Integer read GetStep write SetStep;
     property UnicStep: Boolean read GetUnicStep write SetUnicStep;
     property IndexFunc: Integer read GetIndexFunc write SetIndexFunc;
-    { --- Ship drive indexes}
+    { --- Ship drive indexes }
     property IndexMode: Integer read GetIndexMode write SetIndexMode;
     property SubIndex: Integer read GetSubIndex write SetSubIndex;
-    { --- Galaxy map indexes}
+    { --- Galaxy map indexes }
     property IndexGMMode: Integer read GetIndexGMMode write SetIndexGMMode;
     property SubGMIndex: Integer read GetSubGMIndex write SetSubGMIndex;
     property GMAllSlide: Boolean read GetGMAllSlide write SetGMAllSlide;
-    { --- System map indexes}
+    { --- System map indexes }
     property IndexSMMode: Integer read GetIndexSMMode write SetIndexSMMode;
     property SubSMIndex: Integer read GetSubSMIndex write SetSubSMIndex;
     { --- Exploration FSS indexes }
@@ -454,6 +470,8 @@ type
     property SwitchUpdate : Boolean read FSwitchUpdate write FSwitchUpdate;
     { --- Indic for a vocal app used }
     property VocalAppUsed: Boolean read GetVocalAppUsed write SetVocalAppUsed;
+    { --- Indic for reverse forward and backward speed ship  }
+    property ReverseForward: Boolean read GetReverseForward write SetReverseForward;
 
     constructor Create(const AOwner: TAreaTobii);
   end;
@@ -600,8 +618,8 @@ type
     Old_LandingGear : Boolean;
     Old_InSRV       : Boolean;
     Old_TurretView  : Boolean;
-    Old_Hud         : TKindHud;
     Old_GuiValue    : TGuiType;
+    Old_LowCruise   : Boolean;
     procedure ThDelay(ms: Cardinal);
     procedure Process;
   public
@@ -1287,10 +1305,12 @@ begin
     Border := False;
     BoxUpdate(1, 7, 91200, '',                  True, sm_blinkback, True);    //91002
     BoxUpdate(2, 7, 91001, 'KEYBOARD',          True, sm_blinkback, False);
+
+    BoxUpdate(3, 2, 91004, 'ELITE DANGEROUS',   True, sm_blinkback, False);
     BoxUpdate(3, 7, 91200, '',                  True, sm_blinkback, True);    //91003
-    BoxUpdate(4, 7, 91004, 'ELITE DANGEROUS',   True, sm_blinkback, False);
-    BoxUpdate(5, 7, 91005, 'ELITE WITH VOCAL',  True, sm_blinkback, False);    //91005
-    BoxUpdate(6, 7, 91006, 'PARAMETERS',        True, sm_blinkback, False)
+    BoxUpdate(3, 5, 91005, 'ELITE WITH VOCAL',  True, sm_blinkback, False);   //91005
+
+    BoxUpdate(5, 7, 91006, 'PARAMETERS',        True, sm_blinkback, False)
   end;
   FunctionSound
 end;
@@ -1300,8 +1320,8 @@ begin
   ResetAreas;
   with FOwner do begin
     Border := False;
-    BoxUpdate(1, 2, 91000, 'QUIT',   True, sm_blinkback, False);
-    BoxUpdate(1, 7, 91007, 'BACK',   True, sm_blinkback, False)
+    BoxUpdate(3, 2, 91000, 'QUIT',   True, sm_blinkback, False);
+    BoxUpdate(3, 5, 91007, 'BACK',   True, sm_blinkback, False)
   end;
   FunctionSound
 end;
@@ -1942,7 +1962,7 @@ begin
     BoxUpdate(1, 3, 91473, 'ZOOM IN',       True, BtnMode, False);
     BoxUpdate(1, 4, 91474, 'ANALYSE',       True, sm_blinkback, False);
     BoxUpdate(1, 5, 91475, 'ZOOM OUT',      True, BtnMode, False);
-    BoxUpdate(1, 6, 91476, 'HELP',          True, sm_blinkback, False);
+//    BoxUpdate(1, 6, 91476, 'HELP',          True, sm_blinkback, False);
     BoxUpdate(1, 7, 91477, 'BACK',          True, sm_blinkback, False);
     BoxUpdate(2, 2, 91478, 'RADIO DEC',     True, BtnMode, False);
     BoxUpdate(2, 4, 91479, 'PITCH INC',     True, BtnMode, False);
@@ -2048,19 +2068,27 @@ begin
     BoxUpdate(2, 4, 91230, 'PITCH UP',      True, BtnMode, False);
     BoxUpdate(2, 6, 91235, 'ROLL RIGHT',    True, BtnMode, False);
     BoxUpdate(2, 7, 91283, 'SPEED MORE',    True, sm_blinkback, False);
-    BoxUpdate(3, 1, 91284, 'SPEED 25%',     True, sm_blinkback, False);
-    BoxUpdate(3, 7, 91285, 'SPEED 0%',      True, sm_blinkback, False);
+
+    BoxUpdate(3, 1, 91288, 'SPEED 75%',     True, sm_blinkback, False);
+    if LowCruise then
+      if ReverseForward
+        then BoxUpdate(3, 7, 91289, 'BACKWARD', True, sm_blinkback, False)
+        else BoxUpdate(3, 7, 91289, 'FORWARD',  True, sm_blinkback, False);
+
     BoxUpdate(4, 1, 91286, 'SPEED 50%',     True, sm_blinkback, False);
     BoxUpdate(4, 2, 91232, 'YAW LEFT',      True, BtnMode, False);
     BoxUpdate(4, 6, 91233, 'YAW RIGHT',     True, BtnMode, False);
     BoxUpdate(4, 7, 91287, 'SPEED 100%',    True, sm_blinkback, False);
-    BoxUpdate(5, 1, 91288, 'SPEED 75%',     True, sm_blinkback, False);
+    BoxUpdate(5, 1, 91284, 'SPEED 25%',     True, sm_blinkback, False);
+    BoxUpdate(5, 7, 91297, 'SPEED 0%',      True, sm_blinkback, False);
     BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
-    BoxUpdate(6, 2, 91290, 'BOOST',         True, sm_blinkback, False);
+    if LowCruise
+      then BoxUpdate(6, 2, 91290, 'BOOST',  True, sm_blinkback, False);
     BoxUpdate(6, 3, 91237, 'SHOOT 2',       True, sm_blinkback, False);
     BoxUpdate(6, 4, 91231, 'PITCH DOWN',    True, BtnMode, False);
     BoxUpdate(6, 5, 91236, 'SHOOT 1',       True, sm_blinkback, False);
-    BoxUpdate(6, 6, 91291, 'FLIGHT ASSIST', True, sm_blinkback, False);
+    if LowCruise
+      then BoxUpdate(6, 6, 91291, 'FLIGHT ASSIST', True, sm_blinkback, False);
     BoxUpdate(6, 7, 91599, 'PAUSE',         True, sm_blinkback, False)
   end
 end;
@@ -2100,13 +2128,19 @@ begin
     BoxUpdate(2, 4, 91230, 'PITCH UP',      True, sm_directnotnull, False);
     BoxUpdate(2, 6, 91512, 'NORD EST',      True, sm_directnotnull, False);
     BoxUpdate(2, 7, 91267, 'NEXT HOSTILE',  True, sm_blinkback, False);
-    BoxUpdate(3, 1, 91284, 'SPEED 25%',     True, sm_blinkback, False);
-    BoxUpdate(3, 7, 91285, 'SPEED 0%',      True, sm_blinkback, False);
+
+    BoxUpdate(3, 1, 91288, 'SPEED 75%',     True, sm_blinkback, False);
+    if LowCruise then
+      if ReverseForward
+        then BoxUpdate(3, 7, 91289, 'BACKWARD', True, sm_blinkback, False)
+        else BoxUpdate(3, 7, 91289, 'FORWARD',  True, sm_blinkback, False);
+
     BoxUpdate(4, 1, 91286, 'SPEED 50%',     True, sm_blinkback, False);
     BoxUpdate(4, 2, 91232, 'YAW LEFT',      True, sm_directnotnull, False);
     BoxUpdate(4, 6, 91233, 'YAW RIGHT',     True, sm_directnotnull, False);
     BoxUpdate(4, 7, 91287, 'SPEED 100%',    True, sm_blinkback, False);
-    BoxUpdate(5, 1, 91288, 'SPEED 75%',     True, sm_blinkback, False);
+    BoxUpdate(5, 1, 91284, 'SPEED 25%',     True, sm_blinkback, False);
+    BoxUpdate(5, 7, 91297, 'SPEED 0%',      True, sm_blinkback, False);
     BoxUpdate(6, 1, 91570, 'SWITCH',        True, sm_blinkback, False);
     BoxUpdate(6, 2, 91513, 'SUD WEST',      True, sm_directnotnull, False);
     BoxUpdate(6, 3, 91237, 'SHOOT 2',       True, sm_blinkback, False);
@@ -2160,7 +2194,7 @@ begin
     BoxUpdate(1, 3, 91524, ASt1,              True, sm_blinkback, False);
     BoxUpdate(1, 4, 91239, 'FUNC',            True, sm_blinkback, False);
     BoxUpdate(1, 5, 91525, 'PITCH UP',        True, sm_blinkback, False);
-    BoxUpdate(1, 7, 91285, 'SPEED 0%',        True, sm_blinkback, False);
+    BoxUpdate(1, 7, 91297, 'SPEED 0%',        True, sm_blinkback, False);
     BoxUpdate(2, 1, 91526, 'ROLL LEFT',       True, sm_blinkback, False);
     BoxUpdate(2, 2, 91527, 'BACKWARD THRUST', True, BtnMode, False);
     BoxUpdate(2, 4, 91528, 'UP THRUST',       True, BtnMode, False);
@@ -2257,7 +2291,8 @@ begin
   with FOwner, FEliteStatus do
     if InSrv then begin
       BoxUpdate(2, 3, 91252, 'CARGO SCOOP',         True, sm_blinkback, False);
-      BoxUpdate(2, 5, 91403, 'SHIP Recall/Dismiss', True, sm_blinkback, False);
+      BoxUpdate(2, 4, 91403, 'SHIP Recall/Dismiss', True, sm_blinkback, False);
+      BoxUpdate(2, 5, 91255, 'COCKPIT MODE',        True, sm_blinkback, False);
       BoxUpdate(3, 7, 91266, 'PREV HOSTILE',        True, sm_blinkback, False);
       BoxUpdate(4, 4, 91256, 'PIPE ENGINES',        True, sm_blinkback, False);
       BoxUpdate(4, 7, 91267, 'NEXT HOSTILE',        True, sm_blinkback, False);
@@ -2536,6 +2571,8 @@ begin
   VocalAppUsed          := False; { --- TODO auto detect Raoul Fumier or other vocal app }
   FEliteAssistUsed      := False;
   FEliteAssistStarted   := False;
+  ReverseForward        := False;
+  Speed                 := ts_0;
 end;
 
 procedure TEliteContext.DoACSAnalyse;
@@ -2894,6 +2931,15 @@ begin
   with FOwner, FEliteManager do NavLauncher(DSDZoomOut, DSDZoomOut, IndexDSDMode)
 end;
 
+procedure TEliteContext.DoFlightSpeedNull;
+begin
+  with FOwner, FEliteManager do begin
+    SpeedNull;
+    Speed := ts_0;
+    with FContext do FunctionSound
+  end
+end;
+
 procedure TEliteContext.DoFriendsMenuShow;
 begin
   with FOwner, FEliteManager do DoClicUnique(FriendBoard);
@@ -2903,6 +2949,7 @@ end;
 procedure TEliteContext.DoFSD;
 begin
   with FOwner, FEliteManager do FSD;
+  ReverseForward := False;
   Drive_display
 end;
 
@@ -3292,6 +3339,24 @@ begin
    with FOwner, FContext do if not DisplayPanel and not isPause then FunctionSound
 end;
 
+procedure TEliteContext.DoSetSpeed(Value: TKindSpeed);
+begin
+  with FOwner, FEliteManager do begin
+    Speed := TSpeedType( Integer(Value) + (4 * Integer(ReverseForward)) );
+    case Speed of
+      ts_25   : Speed25;
+      ts_50   : Speed50;
+      ts_75   : Speed75;
+      ts_100  : Speed100;
+      ts_m25  : SpeedM25;
+      ts_m50  : SpeedM50;
+      ts_m75  : SpeedM75;
+      ts_m100 : SpeedM100;
+    end;
+    with FContext do FunctionSound
+  end
+end;
+
 procedure TEliteContext.DoShipDismissRecall;
 begin
   with FOwner, FEliteManager, FEliteStatus do if InSrv then ShipDismissRecall
@@ -3358,6 +3423,17 @@ begin
   with FOwner, FEliteManager do NavLauncher(CamZoomOut, CamZoomOut, IndexSMMode)
 end;
 
+procedure TEliteContext.DoSpeedReverse;
+begin
+  ReverseForward := not ReverseForward;
+  Drive_display;
+  if Speed <> ts_0 then begin
+    Speed := TSpeedType( (Integer(Speed) + 4) mod 8 );
+    DoSetSpeed( TKindSpeed( Integer(Speed) mod 4) )
+  end;
+  with FOwner, FContext do FunctionSound
+end;
+
 procedure TEliteContext.DoStartFighter;
 begin
   with FOwner, FEliteManager, FEliteStatus do
@@ -3372,7 +3448,8 @@ end;
 
 procedure TEliteContext.DoSuperNavigation;
 begin
-  with FOwner, FEliteManager do SuperNavigation;
+  with FOwner, FEliteManager, FEliteStatus do SuperNavigation;
+  ReverseForward := False;
   Drive_display
 end;
 
@@ -3572,19 +3649,19 @@ begin
       91239 : DoClic(Func_display);             //Display functions
       91282 : DoClic(Deceleration);             //Less speed
       91283 : DoClic(Acceleration);             //More speed
-      91285 : DoClicUnique(SpeedNull);          //0%
-      91284 : DoClicUnique(Speed25);            //25%
-      91286 : DoClicUnique(Speed50);            //50%
-      91288 : DoClicUnique(Speed75);            //75%
-      91287 : DoClicUnique(Speed100);           //100%
-      91289 : DoClicUnique(InverserPropulsion); //Inv speed
+//      91285 : DoClicUnique(SpeedNull);          //0%  Only SRV
+      91284 : DoSetSpeed(ks_speed25);           //25%
+      91286 : DoSetSpeed(ks_Speed50);           //50%
+      91288 : DoSetSpeed(ks_Speed75);           //75%
+      91287 : DoSetSpeed(ks_Speed100);          //100%
+      91289 : DoSpeedReverse;                   //Reverse forward
       91290 : DoClicUnique(Boost);              //Boost
       91291 : AssistanceDeVol(ft_none);         //Flight assist
       91293 : DoClicUnique(DoSuperNavigation);  //Supercruise
       91294 : DoClicUnique(DoFSD);              //FSD
       91295 : DoPrevShip;                       //Previous ship
       91296 : DoNextShip;                       //Next ship
-      91297 : ; //NULL
+      91297 : DoFlightSpeedNull;                //Flight null speed
 
       { --- Functions actions }
       91240 : AssignFunc(0);
@@ -3716,7 +3793,7 @@ begin
       91473 : DoClic(DoACSZoomIn);
       91474 : DoClicUnique(DoACSAnalyse);
       91475 : DoClic(DoACSZoomOut);
-      91476 : DoClicUnique(DoACSHelp);
+      91476 : DoClicUnique(DoACSHelp);            //Useless
       91477 : DoClicUnique(DoACSBack);
       91478 : DoClic(DoACSRadioDec);
       91479 : DoClic(DoACSPitchDec);
@@ -3896,6 +3973,11 @@ begin
   Result := KeyReadBoolean(ParamKey, 'IsFSSOpened')
 end;
 
+function TEliteContext.GetLowCruise: Boolean;
+begin
+  with FOwner, FEliteStatus do Result := not SuperCruise and not FsdJump
+end;
+
 function TEliteContext.GetMapCalled: TKindMapCall;
 begin
   Result := TKindMapCall( KeyReadInt(ParamKey, 'MapCalled') )
@@ -3904,6 +3986,11 @@ end;
 function TEliteContext.GetPanelCalled: TKindPanels;
 begin
   Result := TKindPanels( KeyReadInt(ParamKey, 'PanelCalled') )
+end;
+
+function TEliteContext.GetReverseForward: Boolean;
+begin
+  Result := KeyReadBoolean(ParamKey, 'ReverseForward')
 end;
 
 function TEliteContext.GetSlideAssist: Boolean;
@@ -4271,6 +4358,11 @@ begin
   KeyWrite(ParamKey, 'PanelCalled', Integer(Value))
 end;
 
+procedure TEliteContext.SetReverseForward(const Value: Boolean);
+begin
+  KeyWrite(ParamKey, 'ReverseForward', Value)
+end;
+
 procedure TEliteContext.SetSlideAssist(const Value: Boolean);
 begin
   KeyWrite(IniKey, 'SlideAssist', Value)
@@ -4414,7 +4506,8 @@ begin
   Old_InSRV       := False;
   Old_TurretView  := False;
   FreeOnTerminate := True;
-  Priority        := tpLower
+  Priority        := tpLower;
+  Old_LowCruise   := True
 end;
 
 procedure TContextObserver.Execute;
@@ -4428,6 +4521,22 @@ begin
 end;
 
 procedure TContextObserver.Process;
+
+  procedure UpdateOnShipSpeed; begin
+    with ThAreaTobii, FEliteStatus, FElite do begin
+       if Old_LowCruise <> LowCruise then begin
+         case GuiValue of
+           gt_nofocus : if not IsLanded and not IsDocked and not InSrv then begin
+             Speed := ts_0;
+             Drive_display
+           end
+         end;
+         Old_LowCruise := LowCruise;
+       end;
+
+    end
+  end;
+
 
   procedure UpdateDSDView; begin
     with ThAreaTobii, FEliteStatus, FElite do
@@ -4626,6 +4735,8 @@ begin
           and Hardpoint not deployed }
     UpdateDriveDisplayWhenLanding
   end;
+  { --- Update if Speed changed }
+  UpdateOnShipSpeed;
   { --- Update DSD view }
   UpdateDSDView;
   { --- Update FSS view }

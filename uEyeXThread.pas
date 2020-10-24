@@ -279,7 +279,7 @@ uses
 function GetScreenBounds(const Panel: TPanel): TRect;
 var originpoint: TPoint;
 begin
-	originpoint := Panel.ClientToScreen(point(0,0));
+  originpoint := Panel.ClientToScreen(point(0,0));
   result := TRect.Create(originpoint,Panel.Width,Panel.Height)
 end;
 

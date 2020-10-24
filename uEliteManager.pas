@@ -1708,7 +1708,10 @@ begin
     cmt_combat      : if not EliteStatus.HudInanalysisMode then Exit;
     cmt_exploration : if EliteStatus.HudInanalysisMode then Exit;
   end;
-  FKeyInventory.KeyTrigger_( 'PlayerHUDModeToggle', WITH_KEYUP)
+  case EliteStatus.InSrv of
+    True : FKeyInventory.KeyTrigger_( 'PlayerHUDModeToggle_Buggy', WITH_KEYUP)
+    else FKeyInventory.KeyTrigger_( 'PlayerHUDModeToggle', WITH_KEYUP)
+  end;
 end; {CockpitMode}
 
 procedure TCustomEliteManager.ModeACS;
