@@ -968,7 +968,7 @@ type
     function IsCombinationJoyBusy: Boolean;
     function IsCombinatonFree: Boolean;
   private
-    { --- Build availaible conbibnation}
+    { --- Build availaible conbibnation }
     function FindFreeCombination(var Key, Func1, Func2: TEliteKeyType;
       var UseTwoFunc: Boolean; var NewSignal: Cardinal):Boolean;
   private
