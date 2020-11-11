@@ -50,6 +50,8 @@ It also allows you to dictate your messages to other commanders.
 
 [Using keyboard](https://github.com/MaxiDonkey/EDTaupeEye/tree/master/img/edte_img4mini.png)
 
+## **Video**
+[![Demo](http://www.maxidonkey.com/EDTaupeEye.mp4)](http://www.maxidonkey.com/EDTaupeEye.mp4)
 
 
 
